@@ -1,5 +1,25 @@
 @import "tailwindcss";
 
+@layer base {
+  @media (max-width: 768px) {
+    input, textarea, select {
+      font-size: 16px !important;
+    }
+  }
+}
+
+@layer utilities {
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+  .min-h-safe {
+    min-height: calc(100vh + env(safe-area-inset-bottom));
+  }
+}
+
 @layer components {
   .bento-card {
     @apply bg-white rounded-[20px] border border-slate-200 p-5 transition-all duration-200 ease-in flex flex-col h-full shadow-sm hover:shadow-md;

@@ -107,7 +107,7 @@ export function Messages() {
   };
 
   return (
-    <div className="h-[calc(100vh-150px)] md:h-[calc(100vh-140px)] flex bg-white rounded-3xl overflow-hidden shadow-2xl border border-slate-100 relative">
+    <div className="h-[calc(100dvh-12rem)] md:h-[calc(100vh-140px)] flex bg-white rounded-3xl overflow-hidden shadow-2xl border border-slate-100 relative">
       {/* Sidebar - Channels & Users */}
       <div className={cn(
         "absolute inset-0 md:relative md:w-80 border-r border-slate-100 flex flex-col bg-slate-50/50 z-20 md:z-auto transition-transform duration-300 md:translate-x-0 w-full",

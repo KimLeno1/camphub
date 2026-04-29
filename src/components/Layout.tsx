@@ -43,7 +43,7 @@ export function Layout() {
   const filteredNav = navItems.filter(item => hasPermission(item.roles as any));
 
   return (
-    <div className="flex h-screen bg-[#F1F5F9] text-slate-900 overflow-hidden font-sans">
+    <div className="flex h-[100dvh] bg-[#F1F5F9] text-slate-900 overflow-hidden font-sans">
       {/* Sidebar - Desktop Only */}
       <aside className="hidden md:flex flex-col w-64 bg-white border-r border-slate-200 z-50">
         <div className="p-6 flex items-center gap-3 shrink-0 text-left">
@@ -111,7 +111,7 @@ export function Layout() {
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
-        <header className="h-[80px] w-full px-4 sm:px-8 flex items-center justify-between border-b border-slate-200 bg-white/80 backdrop-blur-md shrink-0 z-40 text-left">
+        <header className="min-h-[80px] pt-safe w-full px-4 sm:px-8 py-3 flex items-center justify-between border-b border-slate-200 bg-white/80 backdrop-blur-md shrink-0 z-40 text-left">
            <div className="flex items-center gap-3 md:hidden">
             <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-bold">
                {tenant.logo}
@@ -143,12 +143,12 @@ export function Layout() {
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto relative p-4 sm:p-6 lg:p-8 pb-24 md:pb-8">
+        <main className="flex-1 overflow-y-auto relative p-4 sm:p-6 lg:p-8 pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-8">
            <Outlet />
            
            <ProfilePanel isOpen={profilePanelOpen} onClose={() => setProfilePanelOpen(false)} />
 
-           <div className="fixed bottom-24 md:bottom-8 right-8 z-50 pointer-events-none">
+           <div className="fixed bottom-24 md:bottom-8 right-8 z-50 pointer-events-none pb-safe">
               <AnimatePresence>
                 {notifications.filter(n => n.type === 'xp').map((notif) => (
                   <motion.div
@@ -179,7 +179,7 @@ export function Layout() {
                 initial={{ opacity: 0, y: 10, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                className="absolute bottom-20 right-4 left-4 bg-white p-2 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-slate-100 flex flex-col gap-1 z-50 max-h-[50vh] overflow-y-auto"
+                className="absolute bottom-[calc(5rem+env(safe-area-inset-bottom))] right-4 left-4 bg-white p-2 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-slate-100 flex flex-col gap-1 z-50 max-h-[50vh] overflow-y-auto"
               >
                 {filteredNav.slice(4).map((item) => (
                   <NavLink
@@ -208,7 +208,7 @@ export function Layout() {
             )}
           </AnimatePresence>
 
-          <nav className="absolute bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200 flex items-center justify-between px-1 sm:px-2 h-[4.5rem] z-50 pb-safe gap-1">
+          <nav className="absolute bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200 flex items-center justify-between px-1 sm:px-2 h-[calc(4.5rem+env(safe-area-inset-bottom))] z-50 pb-safe pt-1 gap-1">
             {filteredNav.slice(0, 4).map((item) => (
               <NavLink
                 key={item.name}

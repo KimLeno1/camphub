@@ -128,7 +128,7 @@ export function Leaderboard() {
         </div>
       </div>
 
-      <div className="bento-card bg-white p-4 sm:p-8 md:p-12 border-slate-100 relative shadow-2xl pb-24 md:pb-12">
+      <div className="bento-card bg-white p-4 sm:p-8 md:p-12 border-slate-100 relative shadow-2xl pb-12">
          {/* Decorative background element */}
          <div className="absolute inset-0 overflow-hidden rounded-[2rem] pointer-events-none">
            <div className="absolute -top-40 -right-40 w-96 h-96 bg-indigo-50/50 rounded-full blur-3xl" />

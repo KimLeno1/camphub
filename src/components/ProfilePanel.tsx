@@ -119,7 +119,7 @@ export function ProfilePanel({ isOpen, onClose }: ProfilePanelProps) {
             </div>
 
             {/* Footer Actions */}
-            <div className="p-4 border-t border-slate-100 bg-slate-50 mt-auto space-y-2">
+            <div className="p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] border-t border-slate-100 bg-slate-50 mt-auto space-y-2">
               <button className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-white border border-transparent hover:border-slate-200 hover:shadow-sm transition-all text-slate-700 font-bold text-sm">
                 <div className="flex items-center gap-3">
                   <Settings className="w-4 h-4 text-slate-400" />
