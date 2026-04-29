@@ -1,0 +1,13 @@
+@import "tailwindcss";
+
+@layer components {
+  .bento-card {
+    @apply bg-white rounded-[20px] border border-slate-200 p-5 transition-all duration-200 ease-in flex flex-col h-full shadow-sm hover:shadow-md;
+  }
+  .xp-gradient {
+    background: linear-gradient(90deg, #6366F1 0%, #A855F7 100%);
+  }
+  .badge {
+    @apply px-2.5 py-1 rounded-full text-xs font-semibold;
+  }
+}
