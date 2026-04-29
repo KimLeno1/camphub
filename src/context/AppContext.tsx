@@ -63,6 +63,7 @@ interface AppContextType extends AppState {
   markNotificationRead: (id: string) => void;
   dismissNotification: (id: string) => void;
   updatePreferences: (prefs: Partial<NotificationPreferences>) => void;
+  updateUser: (updates: Partial<User>) => void;
   hasPermission: (role: UserRole[]) => boolean;
 }
 
@@ -87,7 +88,7 @@ const DEFAULT_USER: User = {
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [tenant] = useState<Tenant>(DEFAULT_TENANT);
-  const [user] = useState<User>(DEFAULT_USER);
+  const [user, setUser] = useState<User>(DEFAULT_USER);
   const [xp, setXp] = useState(1240);
   const [badges] = useState<Badge[]>([
     {
@@ -192,6 +193,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
 
+  const updateUser = useCallback((updates: Partial<User>) => {
+    setUser(prev => ({ ...prev, ...updates }));
+  }, []);
+
   const hasPermission = (allowedRoles: UserRole[]) => {
     return allowedRoles.includes(user.role);
   };
@@ -212,6 +217,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       markNotificationRead,
       dismissNotification,
       updatePreferences,
+      updateUser,
       hasPermission
     }}>
       {children}

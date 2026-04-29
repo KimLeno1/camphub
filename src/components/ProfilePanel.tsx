@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { useAppContext } from '../context/AppContext';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -8,7 +8,8 @@ import {
   User, 
   ShieldCheck, 
   Award,
-  Zap
+  Zap,
+  Camera
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 
@@ -18,7 +19,31 @@ interface ProfilePanelProps {
 }
 
 export function ProfilePanel({ isOpen, onClose }: ProfilePanelProps) {
-  const { user, level, xp, xpProgress, badges } = useAppContext();
+  const { user, level, xp, xpProgress, badges, updateUser, addNotification } = useAppContext();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        addNotification({
+          type: 'alert',
+          title: 'File too large',
+          message: 'Avatar image must be under 5MB.',
+        });
+        return;
+      }
+      
+      const imageUrl = URL.createObjectURL(file);
+      updateUser({ avatar: imageUrl });
+      
+      addNotification({
+        type: 'alert', // Could be 'success' if we had it, fallback to alert
+        title: 'Avatar Updated',
+        message: 'Your profile picture has been changed successfully.',
+      });
+    }
+  };
 
   return (
     <AnimatePresence>
@@ -59,15 +84,30 @@ export function ProfilePanel({ isOpen, onClose }: ProfilePanelProps) {
             <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-8">
               {/* Profile Header Block */}
               <div className="flex flex-col items-center text-center">
-                <div className="relative mb-4">
-                  <div className="w-24 h-24 rounded-[2rem] overflow-hidden border-4 border-white shadow-xl shadow-indigo-100 bg-slate-100">
+                <div className="relative mb-4 group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+                  <div className="w-24 h-24 rounded-[2rem] overflow-hidden border-4 border-white shadow-xl shadow-indigo-100 bg-slate-100 transition-transform group-hover:scale-105">
                     <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                    
+                    {/* Hover Overlay */}
+                    <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-white transition-opacity">
+                      <Camera className="w-6 h-6 mb-1" />
+                      <span className="text-[10px] font-bold uppercase tracking-wider">Edit</span>
+                    </div>
                   </div>
-                  <div className="absolute -bottom-3 -right-3 bg-white p-1 rounded-xl shadow-lg">
+                  <div className="absolute -bottom-3 -right-3 bg-white p-1 rounded-xl shadow-lg z-10">
                     <div className="bg-indigo-600 text-white w-8 h-8 rounded-lg flex items-center justify-center font-black text-sm">
                       {level}
                     </div>
                   </div>
+                  
+                  {/* Hidden Input */}
+                  <input 
+                    type="file" 
+                    ref={fileInputRef} 
+                    onChange={handleAvatarChange} 
+                    accept="image/*" 
+                    className="hidden" 
+                  />
                 </div>
                 
                 <h3 className="text-xl font-black text-slate-900 tracking-tight">{user.name}</h3>
