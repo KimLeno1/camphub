@@ -1,60 +1,75 @@
-import React from 'react';
-import { HashRouter, Routes, Route } from 'react-router-dom';
-import { AppProvider } from './context/AppContext';
-import { Layout } from './components/Layout';
+import React, { useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Toaster } from 'sonner';
+import { AppLayout } from './components/layout/AppLayout';
+import { Login } from './pages/Login';
+import { useAuthStore } from './store/authStore';
+
 import { Dashboard } from './pages/Dashboard';
-import { Quizzes } from './pages/Quizzes';
-import { Forum } from './pages/Forum';
-import { Materials } from './pages/Materials';
-import { AdminPortal } from './pages/AdminPortal';
+import { Communities } from './pages/Communities';
+import { CommunityDetail } from './pages/CommunityDetail';
+import { Marketplace } from './pages/Marketplace';
+import { Governance } from './pages/Governance';
+import { Events } from './pages/Events';
+import { Settings } from './pages/Settings';
+import { Search } from './pages/Search';
+import { AiHub } from './pages/AiHub';
+import { Security } from './pages/Security';
+import { Hostels } from './pages/Hostels';
+import { Resources } from './pages/Resources';
+import { Feed } from './pages/Feed';
+import { UserProfile } from './pages/UserProfile';
 import { Opportunities } from './pages/Opportunities';
-import { Messages } from './pages/Messages';
-import { Notifications } from './pages/Notifications';
-import { Leaderboard } from './pages/Leaderboard';
-import { BarChart3, CalendarDays } from 'lucide-react';
+import { Chat } from './pages/Chat';
+import { VoiceChat } from './pages/VoiceChat';
+
+import { ResourceDetail } from './pages/ResourceDetail';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 export default function App() {
+  const { initializeAuth } = useAuthStore();
+
+  useEffect(() => {
+    initializeAuth();
+  }, [initializeAuth]);
+
   return (
-    <AppProvider>
-      <HashRouter>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Layout />}>
+          <Route path="/login" element={<Navigate to="/" replace />} />
+          <Route path="/" element={<AppLayout />}>
             <Route index element={<Dashboard />} />
-            <Route path="leaderboard" element={<Leaderboard />} />
-            <Route path="academy" element={<Materials />} />
-            <Route path="quests" element={<Quizzes />} />
-            <Route path="community" element={<Forum />} />
+            <Route path="communities" element={<Communities />} />
+            <Route path="communities/:communityId/*" element={<CommunityDetail />} />
+            <Route path="feed" element={<Feed />} />
+            <Route path="resources" element={<Resources />} />
+            <Route path="resources/:id" element={<ResourceDetail />} />
+            <Route path="profile/:userId" element={<UserProfile />} />
+            <Route path="marketplace" element={<Marketplace />} />
+            <Route path="governance" element={<Governance />} />
+            <Route path="events" element={<Events />} />
+            <Route path="settings" element={<Settings />} />
+            <Route path="search" element={<Search />} />
+            <Route path="hostels" element={<Hostels />} />
+            <Route path="ai-hub" element={<AiHub />} />
+            <Route path="security" element={<Security />} />
             <Route path="opportunities" element={<Opportunities />} />
-            <Route path="messages" element={<Messages />} />
-            <Route path="notifications" element={<Notifications />} />
-            <Route path="admin" element={<AdminPortal />} />
-            {/* Stubs for other features */}
-            <Route path="clubs" element={
-              <div className="text-center mt-20 p-10 max-w-2xl mx-auto">
-                <div className="w-20 h-20 bg-indigo-50 text-indigo-600 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-indigo-100">
-                   <BarChart3 className="w-10 h-10" />
-                </div>
-                <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-4 uppercase">Campus Clubs Protocol</h2>
-                <p className="text-slate-400 font-medium leading-relaxed">
-                  Decentralized club management and election protocols are being provisioned. Your institutional membership remains active.
-                </p>
-              </div>
-            } />
-            <Route path="events" element={
-              <div className="text-center mt-20 p-10 max-w-2xl mx-auto">
-                <div className="w-20 h-20 bg-amber-50 text-amber-600 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-amber-100">
-                   <CalendarDays className="w-10 h-10" />
-                </div>
-                <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-4 uppercase">Institution Calendar</h2>
-                <p className="text-slate-400 font-medium leading-relaxed">
-                  Real-time event synchronization engine is initializing. Faculty-led sessions will appear here shortly.
-                </p>
-              </div>
-            } />
+            <Route path="chat" element={<Chat />} />
           </Route>
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-      </HashRouter>
-    </AppProvider>
+      </BrowserRouter>
+      <Toaster position="top-right" />
+    </QueryClientProvider>
   );
 }
-

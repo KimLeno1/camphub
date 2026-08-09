@@ -1,6 +1,8 @@
 {
-  "name": "CampusOS",
-  "description": "A scalable multi-tenant education platform for institutions to manage learning, communities, and growth.",
+  "name": "Center7",
+  "description": "A decentralized student community platform where students govern themselves, manage security, vote on policies, and run interactive learning hubs without administrators.",
   "requestFramePermissions": [],
-  "majorCapabilities": []
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }

@@ -1,64 +1,34 @@
-import express from "express";
-import { createServer } from "http";
-import { Server } from "socket.io";
-import { createServer as createViteServer } from "vite";
+import { NestFactory } from "@nestjs/core";
+import { AppModule } from "./src/backend/app.module.ts";
 import path from "path";
+import { createServer as createViteServer } from "vite";
+import express from "express";
+import { SpaExceptionFilter } from "./src/backend/filters/spa.filter.ts";
 
 async function startServer() {
-  const app = express();
-  const httpServer = createServer(app);
-  const io = new Server(httpServer, {
-    cors: {
-      origin: "*",
-    },
-  });
-
   const PORT = 3000;
 
-  // Real-time Messaging Logic
-  const activeUsers = new Map();
+  // Initialize NestJS
+  const app = await NestFactory.create(AppModule);
 
-  io.on("connection", (socket) => {
-    console.log("User connected:", socket.id);
+  const server = app.getHttpAdapter().getInstance();
 
-    socket.on("join", (userData) => {
-      activeUsers.set(socket.id, { ...userData, socketId: socket.id });
-      io.emit("users_update", Array.from(activeUsers.values()));
-    });
-
-    socket.on("send_message", (messageData) => {
-      // Logic for broadcasting: if target is a channel, broadcast to all
-      // If direct, send to specific socket (simulated here for demo)
-      io.emit("new_message", {
-        ...messageData,
-        id: Date.now().toString(),
-        timestamp: new Date().toLocaleTimeString(),
-      });
-    });
-
-    socket.on("disconnect", () => {
-      activeUsers.delete(socket.id);
-      io.emit("users_update", Array.from(activeUsers.values()));
-      console.log("User disconnected");
-    });
-  });
-
-  // Vite middleware for development
+  let vite: any = null;
   if (process.env.NODE_ENV !== "production") {
-    const vite = await createViteServer({
+    vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
     });
-    app.use(vite.middlewares);
+    server.use(vite.middlewares);
   } else {
     const distPath = path.join(process.cwd(), 'dist');
-    app.use(express.static(distPath));
-    app.get('*', (req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
-    });
+    server.use(express.static(distPath));
   }
 
-  httpServer.listen(PORT, "0.0.0.0", () => {
+  // Register the SPA filter to delegate non-API 404s to the frontend
+  app.useGlobalFilters(new SpaExceptionFilter(vite));
+
+  await app.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running on http://localhost:${PORT}`);
   });
 }

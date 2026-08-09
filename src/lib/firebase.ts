@@ -1,0 +1,14 @@
+import { initializeApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
+
+const firebaseConfig = {
+  projectId: "plenary-hybrid-107pf",
+  appId: "1:447692084358:web:58299790f680e893eded07",
+  apiKey: "AIzaSyAkDyFB0JMJzmYtUtyfz8V_eM-vbwC2uRs",
+  authDomain: "plenary-hybrid-107pf.firebaseapp.com",
+  storageBucket: "plenary-hybrid-107pf.firebasestorage.app",
+  messagingSenderId: "447692084358"
+};
+
+export const app = initializeApp(firebaseConfig);
+export const auth = getAuth(app);
