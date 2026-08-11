@@ -68,7 +68,7 @@ export function AuthModal() {
     try {
       try {
         await signInWithEmailAndPassword(auth, demoEmail, demoPassword);
-        toast.success('Successfully authenticated as Demo Student Juror!');
+        toast.success('Successfully authenticated as Demo Student!');
       } catch (signInErr: any) {
         if (
           signInErr.code === 'auth/user-not-found' || 
@@ -126,7 +126,7 @@ export function AuthModal() {
             ) : (
               <Zap className="w-4 h-4 text-amber-300 fill-amber-300 animate-pulse" />
             )}
-            Quick Demo Access (Student Juror)
+            Quick Demo Access (Student)
           </Button>
 
           <div className="relative my-3">

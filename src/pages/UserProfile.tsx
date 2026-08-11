@@ -65,7 +65,7 @@ export function UserProfile() {
       trustLevel: 4,
       reputationScore: 420,
       avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=david.o',
-      bio: 'Hardware tinkerer, student council juror, and open-source enthusiast.',
+      bio: 'Hardware tinkerer, student council representative, and open-source enthusiast.',
       joinedDate: '2024-08-20',
     },
   };

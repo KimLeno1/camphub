@@ -5,7 +5,7 @@ import { Input } from './ui/input';
 import { Badge } from './ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from './ui/dialog';
 import { 
-  Briefcase, GraduationCap, DollarSign, Calendar, MapPin, 
+  Briefcase, GraduationCap, Calendar, MapPin, 
   ExternalLink, Plus, Search, Tag, Bookmark, Heart, Share2, 
   Sparkles, Check, Building2, Globe, Clock, Send, ThumbsUp, ThumbsDown
 } from 'lucide-react';
@@ -37,7 +37,7 @@ const INITIAL_OPPORTUNITIES: Opportunity[] = [
     organization: 'Google Education',
     category: 'Scholarship',
     location: 'Global / Remote',
-    stipend: '$10,000 USD Annual Grant',
+    stipend: '₵10,000 Annual Grant',
     deadline: '2026-10-15',
     applyUrl: 'https://buildyourfuture.withgoogle.com/scholarships',
     description: 'Annual merit scholarship awarded to computer science, software engineering, and STEM students with strong academic standing and leadership in student communities.',
@@ -53,7 +53,7 @@ const INITIAL_OPPORTUNITIES: Opportunity[] = [
     organization: 'TechVentures Labs',
     category: 'Internship',
     location: 'Hybrid / Campus Innovation Park',
-    stipend: '$3,500 / month + Mentorship',
+    stipend: '₵3,500 / month + Mentorship',
     deadline: '2026-09-30',
     applyUrl: 'https://techventures.io/careers/interns-2026',
     description: '12-week paid internship working directly on distributed systems, AI agent workflows, and modern React/TypeScript frontends. Open to 2nd, 3rd, and 4th year students.',
@@ -69,7 +69,7 @@ const INITIAL_OPPORTUNITIES: Opportunity[] = [
     organization: 'Decentralized Campus Foundation',
     category: 'Fellowship',
     location: '100% Remote',
-    stipend: '$2,000 Project Stipend',
+    stipend: '₵2,000 Project Stipend',
     deadline: '2026-11-01',
     applyUrl: 'https://github.com/campus-foundation/fellowship',
     description: 'Build open-source tools for student governance, decentralized voting, or campus resource sharing and receive developer grants and mentorship from senior engineers.',
@@ -268,7 +268,7 @@ export function OpportunitiesPanel() {
         <div>
           <h3 className="text-xl font-heading font-extrabold text-foreground flex items-center gap-2">
             <GraduationCap className="w-6 h-6 text-blue-400" />
-            Campus Opportunities Portal
+            Opportunities Portal
           </h3>
           <p className="text-xs text-muted-foreground mt-1 max-w-xl">
             Discover scholarships, paid internships, research grants, entry jobs, and student hackathons shared by peers and faculty.
@@ -383,8 +383,8 @@ export function OpportunitiesPanel() {
 
                     {opp.stipend && (
                       <div className="flex items-center gap-1.5 truncate text-emerald-600 dark:text-emerald-400 font-bold">
-                        <DollarSign className="w-3 h-3 shrink-0" />
-                        <span className="truncate">{opp.stipend}</span>
+                      <span className="font-bold shrink-0">₵</span>
+                      <span className="truncate">{opp.stipend}</span>
                       </div>
                     )}
 
@@ -543,7 +543,7 @@ export function OpportunitiesPanel() {
                 <Input
                   value={stipend}
                   onChange={(e) => setStipend(e.target.value)}
-                  placeholder="e.g. $5,000 / $25/hr / Fully Funded"
+                  placeholder="e.g. ₵5,000 / ₵25/hr / Fully Funded"
                   className="rounded-xl text-xs"
                 />
               </div>
@@ -646,7 +646,7 @@ export function OpportunitiesPanel() {
                   <div className="space-y-1">
                     <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Compensation / Award</span>
                     <div className="flex items-center gap-1.5 font-semibold text-emerald-600 dark:text-emerald-400">
-                      <DollarSign className="w-4 h-4 shrink-0" />
+                      <span className="font-bold shrink-0">₵</span>
                       <span>{selectedOppForDetails.stipend}</span>
                     </div>
                   </div>

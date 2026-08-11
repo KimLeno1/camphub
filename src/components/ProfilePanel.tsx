@@ -37,7 +37,7 @@ function getReputationRank(reputation: number) {
   }
   if (reputation >= 300) {
     return {
-      title: 'Trusted Juror',
+      title: 'Trusted Member',
       icon: '🛡️',
       tier: 3,
       badgeBg: 'bg-purple-100 dark:bg-purple-950/50',

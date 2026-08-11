@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Badge } from '../components/ui/badge';
-import { Calendar, Clock, MapPin, Users, Plus, Search, Tag, Globe, CheckCircle2, Star, Share2, Sparkles, Filter, ExternalLink, Trash2, Radio } from 'lucide-react';
+import { Calendar, Clock, MapPin, Users, Plus, Search, Tag, Globe, CheckCircle2, Star, Share2, Sparkles, Filter, ExternalLink, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { getStoredEvents, toggleEventRsvp, deleteCampusEvent } from '../lib/eventStore';
 import { CampusEvent } from '../types';
@@ -28,9 +28,6 @@ export function Events() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<CampusEvent | null>(null);
 
-  // Live simulation attendee count for the live event
-  const [liveWatchers, setLiveWatchers] = useState(128);
-
   const reloadEvents = () => {
     setEvents(getStoredEvents());
   };
@@ -40,13 +37,6 @@ export function Events() {
     const handleUpdate = () => reloadEvents();
     window.addEventListener('center7_events_update', handleUpdate);
     return () => window.removeEventListener('center7_events_update', handleUpdate);
-  }, []);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setLiveWatchers(prev => prev + (Math.random() > 0.5 ? 1 : -1));
-    }, 4000);
-    return () => clearInterval(interval);
   }, []);
 
   const handleRsvp = (eventId: string, status: 'going' | 'interested') => {
@@ -130,31 +120,7 @@ export function Events() {
         </div>
       </div>
 
-      {/* Featured Live Livestream Header Card */}
-      <Card className="border-border overflow-hidden relative group bg-gradient-to-r from-red-950/20 via-card to-card">
-        <div className="p-4 sm:p-5 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="space-y-1.5 min-w-0 text-center md:text-left">
-            <div className="flex items-center justify-center md:justify-start gap-2 text-red-500 font-bold text-xs uppercase tracking-wider">
-              <Radio className="w-4 h-4 animate-pulse text-red-500" />
-              <span>Featured Live Campus Stream</span>
-              <Badge className="bg-red-500/20 text-red-500 border-red-500/30 text-[10px] font-bold py-0">
-                {liveWatchers} Students Watching
-              </Badge>
-            </div>
-            <h3 className="font-heading font-extrabold text-lg sm:text-xl text-foreground">
-              Decentralized AI Governance Townhall & Campus Keynote
-            </h3>
-            <p className="text-xs text-muted-foreground max-w-xl">
-              Live broadcast with student council executives discussing academic policies, campus AI labs, and funding.
-            </p>
-          </div>
 
-          <Button className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs h-10 px-5 rounded-xl shadow-sm shrink-0 gap-2">
-            <Radio className="w-4 h-4" />
-            Join Livestream Now
-          </Button>
-        </div>
-      </Card>
 
       {/* Search & Category Toolbar */}
       <div className="space-y-3">

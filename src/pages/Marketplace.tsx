@@ -5,7 +5,7 @@ import { Input } from '../components/ui/input';
 import { Badge } from '../components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../components/ui/dialog';
 import { 
-  Search, Tag, ShoppingBag, Plus, X, DollarSign, User, Mail, 
+  Search, Tag, ShoppingBag, Plus, X, User, Mail, 
   Layers, Package, Check, HelpCircle, Sparkles, Filter, Trash2, Calendar
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -172,7 +172,7 @@ export function Marketplace() {
     }
     const priceNum = parseFloat(formPrice);
     if (isNaN(priceNum) || priceNum < 0) {
-      toast.error('Please enter a valid price (minimum $0)');
+      toast.error('Please enter a valid price (minimum ₵0)');
       return;
     }
     if (!formDescription.trim()) {
@@ -427,7 +427,7 @@ export function Marketplace() {
                 <div>
                   <span className="text-[10px] text-muted-foreground block font-medium">Price</span>
                   <div className="text-base font-extrabold text-foreground font-heading flex items-center text-emerald-600 dark:text-emerald-400">
-                    <DollarSign className="w-4 h-4 shrink-0 -mr-0.5" />
+                    <span className="font-bold mr-0.5">₵</span>
                     <span>{item.price}</span>
                   </div>
                 </div>
@@ -506,9 +506,9 @@ export function Marketplace() {
 
             {/* Price */}
             <div className="space-y-1">
-              <label className="font-bold text-foreground">Price (USD) <span className="text-red-500">*</span></label>
+              <label className="font-bold text-foreground">Price (₵) <span className="text-red-500">*</span></label>
               <div className="relative">
-                <DollarSign className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-xs text-muted-foreground">₵</span>
                 <Input
                   type="number"
                   min="0"
@@ -517,7 +517,7 @@ export function Marketplace() {
                   value={formPrice}
                   onChange={(e) => setFormPrice(e.target.value)}
                   required
-                  className="pl-8 h-9 text-xs"
+                  className="pl-7 h-9 text-xs"
                 />
               </div>
             </div>
@@ -614,8 +614,8 @@ export function Marketplace() {
                   referrerPolicy="no-referrer"
                 />
                 
-                <div className="absolute bottom-3 right-3 bg-background/95 backdrop-blur-xs px-3.5 py-1.5 rounded-xl border border-border/60 text-base font-extrabold text-emerald-600 dark:text-emerald-400 flex items-center shadow-md">
-                  <DollarSign className="w-4.5 h-4.5 -mr-0.5" />
+                <div className="absolute bottom-3 right-3 bg-background/95 backdrop-blur-xs px-3.5 py-1.5 rounded-xl border border-border/60 text-base font-extrabold text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5 shadow-md">
+                  <span className="font-bold">₵</span>
                   <span>{selectedItem.price}</span>
                 </div>
               </div>

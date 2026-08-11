@@ -11,7 +11,6 @@ import {
   Calendar,
   Settings,
   Sparkles,
-  Shield,
   GraduationCap
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
@@ -25,10 +24,8 @@ const navigation = [
   { name: 'Opportunities', href: '/opportunities', icon: GraduationCap },
   { name: 'Hostels', href: '/hostels', icon: Building2 },
   { name: 'Chat', href: '/chat', icon: MessageSquare },
-  { name: 'AI Hub', href: '/ai-hub', icon: Sparkles },
   { name: 'Marketplace', href: '/marketplace', icon: ShoppingBag },
   { name: 'Governance', href: '/governance', icon: ShieldCheck },
-  { name: 'Security', href: '/security', icon: Shield },
 ];
 
 export function Sidebar({ className }: { className?: string }) {

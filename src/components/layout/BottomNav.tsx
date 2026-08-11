@@ -10,7 +10,6 @@ import {
   ShoppingBag,
   MoreHorizontal,
   Settings,
-  Shield,
   Calendar,
   GraduationCap,
   MessageSquare,
@@ -31,9 +30,7 @@ const secondaryItems = [
   { name: 'Chat', href: '/chat', icon: MessageSquare },
   { name: 'Governance', href: '/governance', icon: ShieldCheck },
   { name: 'Hostels', href: '/hostels', icon: Building2 },
-  { name: 'AI Hub', href: '/ai-hub', icon: Sparkles },
   { name: 'Market', href: '/marketplace', icon: ShoppingBag },
-  { name: 'Security', href: '/security', icon: Shield },
   { name: 'Settings', href: '/settings', icon: Settings },
 ];
 

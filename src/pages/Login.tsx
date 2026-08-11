@@ -267,7 +267,7 @@ export function Login() {
             {/* Simulated Live System Metrics */}
             <div className="flex flex-wrap gap-x-8 gap-y-4 pt-4 border-t border-border/60">
               <div>
-                <span className="text-[10px] font-mono uppercase text-muted-foreground block">Active Jurors</span>
+                <span className="text-[10px] font-mono uppercase text-muted-foreground block">Active Members</span>
                 <span className="text-sm font-black text-foreground">142</span>
               </div>
               <div>
@@ -312,7 +312,7 @@ export function Login() {
                   ) : (
                     <Zap className="w-4 h-4 text-amber-300 fill-amber-300 animate-pulse" />
                   )}
-                  Quick Demo Access (Student Juror)
+                  Quick Demo Access (Student)
                 </Button>
 
                 <div className="relative my-4">

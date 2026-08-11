@@ -8,7 +8,7 @@ import { Skeleton } from '../components/ui/skeleton';
 import { 
   Shield, Star, Users, ArrowRight, Zap, Trophy, LogIn, BookOpen, 
   FileText, Download, Scale, ShoppingBag, CheckCircle2, Tag, 
-  Sparkles, Clock, Gavel, ExternalLink, Flame, MessageSquare, ThumbsUp, ThumbsDown
+  Sparkles, Clock, Gavel, ExternalLink, Flame, MessageSquare, ThumbsUp, ThumbsDown, UserCheck
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -23,6 +23,15 @@ export function Dashboard() {
   const [selectedQuest, setSelectedQuest] = useState<any | null>(null);
   const [selectedGov, setSelectedGov] = useState<any | null>(null);
   const [selectedMarketItem, setSelectedMarketItem] = useState<any | null>(null);
+
+  const connectedCount = React.useMemo(() => {
+    try {
+      const friends = JSON.parse(localStorage.getItem('center7_connected_friends') || '[]');
+      return Array.isArray(friends) ? friends.length : 2;
+    } catch {
+      return 2;
+    }
+  }, []);
 
   // Query user communities
   const { data: communitiesData, isLoading: isCommunitiesLoading } = useQuery({
@@ -130,8 +139,8 @@ export function Dashboard() {
     },
     {
       id: 'quest-3',
-      title: 'Civic Juror',
-      description: 'Participate in 2 active governance or jury votes',
+      title: 'Civic Reviewer',
+      description: 'Participate in 2 active governance or community votes',
       progress: 1,
       total: 2,
       reward: '+15 Reputation',
@@ -149,10 +158,10 @@ export function Dashboard() {
     },
     {
       id: 'gov-2',
-      title: 'Jury Case #82: Plagiarism Dispute in CS101 Assignment Repository',
+      title: 'Case #82: Plagiarism Dispute in CS101 Assignment Repository',
       status: 'Under Review',
       statusColor: 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30',
-      votes: '7 Jurors Assigned',
+      votes: '7 Reviewers Assigned',
       time: 'In Deliberation',
     },
     {
@@ -169,7 +178,7 @@ export function Dashboard() {
     {
       id: 'mkt-1',
       title: 'Calculus: Early Transcendentals (9th Edition)',
-      price: '$45',
+      price: '₵45',
       condition: 'Like New',
       category: 'Textbooks',
       seller: 'Alex K.',
@@ -178,7 +187,7 @@ export function Dashboard() {
     {
       id: 'mkt-2',
       title: 'CASIO FX-991EX ClassWiz Scientific Calculator',
-      price: '$20',
+      price: '₵20',
       condition: 'Excellent',
       category: 'Electronics',
       seller: 'Sarah M.',
@@ -187,7 +196,7 @@ export function Dashboard() {
     {
       id: 'mkt-3',
       title: 'Ergonomic Desk LED Lamp with Wireless Charger',
-      price: '$15',
+      price: '₵15',
       condition: 'Brand New',
       category: 'Hostel Gear',
       seller: 'David O.',
@@ -241,7 +250,7 @@ export function Dashboard() {
       )}
 
       {/* Stats Quick Row */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
         <Card className="bento-card p-3 sm:p-4">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-0">
             <CardTitle className="text-xs sm:text-sm font-medium">Reputation Score</CardTitle>
@@ -279,19 +288,7 @@ export function Dashboard() {
           </CardContent>
         </Card>
         
-        <Card className="bento-card p-3 sm:p-4 relative overflow-hidden group">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-0">
-            <CardTitle className="text-xs sm:text-sm font-medium text-purple-700 dark:text-purple-400">Current Quest</CardTitle>
-            <Trophy className="h-4 w-4 text-purple-600 shrink-0 ml-1" />
-          </CardHeader>
-          <CardContent className="p-0 pt-2 sm:pt-4">
-            <div className="text-base sm:text-lg font-bold">Help 5 students</div>
-            <div className="w-full bg-muted rounded-full h-1.5 sm:h-2 mt-1.5">
-              <div className="bg-purple-600 h-1.5 sm:h-2 rounded-full" style={{ width: '60%' }}></div>
-            </div>
-            <p className="text-[11px] sm:text-xs text-muted-foreground mt-1.5">3/5 Completed</p>
-          </CardContent>
-        </Card>
+
       </div>
 
 
@@ -830,7 +827,7 @@ export function Dashboard() {
               <div className="space-y-3 bg-card p-4 rounded-xl border border-border/50 text-xs">
                 <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Active Deliberations</h4>
                 <div className="space-y-2 text-muted-foreground leading-relaxed">
-                  <p>• Summoned trusted student jurors are reviewing evidence logs, timestamps, and community guidelines.</p>
+                  <p>• Summoned trusted peer reviewers are reviewing evidence logs, timestamps, and community guidelines.</p>
                   <p>• Appeals can be filed within 72 hours of decision publication, prompting a second blind review.</p>
                 </div>
               </div>

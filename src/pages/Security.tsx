@@ -34,7 +34,7 @@ import { toast } from 'sonner';
 
 type SecurityTab = 'logs' | 'sandbox' | 'encryption' | 'backups' | 'rate-limits' | 'compliance';
 
-export function Security() {
+export function Security({ isEmbedded = false }: { isEmbedded?: boolean }) {
   const [activeTab, setActiveTab] = useState<SecurityTab>('logs');
   const queryClient = useQueryClient();
 
@@ -216,25 +216,27 @@ export function Security() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 animate-fade-in pb-16">
+    <div className={isEmbedded ? "space-y-6 animate-fade-in" : "max-w-6xl mx-auto space-y-8 animate-fade-in pb-16"}>
       {/* Header Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-red-600 to-rose-600 text-white p-8 md:p-12 shadow-md">
-        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-white via-rose-200 to-rose-900 pointer-events-none" />
-        <div className="relative z-10 max-w-2xl space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/15 backdrop-blur-md rounded-full text-xs font-semibold uppercase tracking-wider">
-            <Shield className="w-3.5 h-3.5 animate-pulse" /> Security Control Center
+      {!isEmbedded && (
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-red-600 to-rose-600 text-white p-8 md:p-12 shadow-md">
+          <div className="absolute inset-0 opacity-10 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-white via-rose-200 to-rose-900 pointer-events-none" />
+          <div className="relative z-10 max-w-2xl space-y-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/15 backdrop-blur-md rounded-full text-xs font-semibold uppercase tracking-wider">
+              <Shield className="w-3.5 h-3.5 animate-pulse" /> Security Control Center
+            </div>
+            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight font-heading leading-tight">
+              Autonomous Student Governance & Security
+            </h1>
+            <p className="text-white/80 text-sm md:text-base leading-relaxed">
+              In Center7, there are no permanent administrators. The student community governs security protocols, audits rate limit blocklists, reviews automated virus scanning, and triggers database backups.
+            </p>
           </div>
-          <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight font-heading leading-tight">
-            Autonomous Student Governance & Security
-          </h1>
-          <p className="text-white/80 text-sm md:text-base leading-relaxed">
-            In Center7, there are no permanent administrators. The student community governs security protocols, audits rate limit blocklists, reviews automated virus scanning, and triggers database backups.
-          </p>
         </div>
-      </div>
+      )}
 
       {/* Security Metrics Dashboard Block */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className={isEmbedded ? "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3" : "grid grid-cols-2 md:grid-cols-5 gap-4"}>
         <Card>
           <CardContent className="p-4 flex flex-col justify-between h-24">
             <span className="text-xs font-medium text-muted-foreground flex items-center gap-1">
@@ -677,7 +679,7 @@ export function Security() {
                 <div>
                   <h3 className="text-lg font-bold font-heading">Database Snapshot & Backups Manager</h3>
                   <p className="text-muted-foreground text-sm">
-                    Student jurors govern local recovery procedures. Generate manual full snapshots or restore database schemas to any prior healthy state instantly.
+                    Community members govern local recovery procedures. Generate manual full snapshots or restore database schemas to any prior healthy state instantly.
                   </p>
                 </div>
                 <div className="flex gap-2 shrink-0">

@@ -441,22 +441,19 @@ export function Governance() {
               Governance Section
             </label>
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-between h-11 px-3.5 bg-card border-border shadow-2xs font-semibold rounded-xl text-xs gap-2"
-                >
-                  <div className="flex items-center gap-2.5 overflow-hidden">
-                    <ActiveIcon className={`w-4 h-4 ${activeOption.iconColor} shrink-0`} />
-                    <span className="truncate">{activeOption.label}</span>
-                    {activeOption.count !== undefined && activeOption.count > 0 && (
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${activeOption.countBg}`}>
-                        {activeOption.count}
-                      </span>
-                    )}
-                  </div>
-                  <ChevronDown className="w-4 h-4 opacity-60 shrink-0 ml-1" />
-                </Button>
+              <DropdownMenuTrigger
+                className="inline-flex items-center justify-between w-full h-11 px-3.5 bg-card border border-border shadow-2xs font-semibold rounded-xl text-xs gap-2 hover:bg-muted/50 transition-colors cursor-pointer outline-none focus:ring-2 focus:ring-primary/20"
+              >
+                <div className="flex items-center gap-2.5 overflow-hidden">
+                  <ActiveIcon className={`w-4 h-4 ${activeOption.iconColor} shrink-0`} />
+                  <span className="truncate">{activeOption.label}</span>
+                  {activeOption.count !== undefined && activeOption.count > 0 && (
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${activeOption.countBg}`}>
+                      {activeOption.count}
+                    </span>
+                  )}
+                </div>
+                <ChevronDown className="w-4 h-4 opacity-60 shrink-0 ml-1" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-[calc(100vw-2rem)] max-w-sm p-1.5 rounded-xl border border-border shadow-xl z-50 bg-card">
                 {navOptions.map((opt) => {

@@ -14,8 +14,6 @@ import { Governance } from './pages/Governance';
 import { Events } from './pages/Events';
 import { Settings } from './pages/Settings';
 import { Search } from './pages/Search';
-import { AiHub } from './pages/AiHub';
-import { Security } from './pages/Security';
 import { Hostels } from './pages/Hostels';
 import { Resources } from './pages/Resources';
 import { UserProfile } from './pages/UserProfile';
@@ -59,8 +57,7 @@ export default function App() {
             <Route path="settings" element={<Settings />} />
             <Route path="search" element={<Search />} />
             <Route path="hostels" element={<Hostels />} />
-            <Route path="ai-hub" element={<AiHub />} />
-            <Route path="security" element={<Security />} />
+            <Route path="security" element={<Navigate to="/settings?tab=security" replace />} />
             <Route path="opportunities" element={<Opportunities />} />
             <Route path="chat" element={<Chat />} />
           </Route>

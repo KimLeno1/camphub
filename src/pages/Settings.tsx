@@ -5,13 +5,20 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { 
-  User, Shield, Bell, Lock
+  User, Shield, Bell, Lock, ShieldAlert
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { Security } from './Security';
 
 export function Settings() {
   const { profile, user } = useAuthStore();
-  const [activeTab, setActiveTab] = useState<'profile' | 'notifications' | 'account'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'notifications' | 'account' | 'security'>(() => {
+    const tabParam = new URLSearchParams(window.location.search).get('tab');
+    if (tabParam === 'security' || tabParam === 'profile' || tabParam === 'notifications' || tabParam === 'account') {
+      return tabParam as any;
+    }
+    return 'profile';
+  });
 
   // Profile form state
   const [displayName, setDisplayName] = useState(profile?.displayName || '');
@@ -59,8 +66,17 @@ export function Settings() {
               onClick={() => setActiveTab('account')}
               className="justify-start gap-2 text-xs font-bold rounded-xl"
             >
-              <Shield className="w-4 h-4 text-purple-500" />
-              Account & Security
+              <Lock className="w-4 h-4 text-purple-500" />
+              Account Verification
+            </Button>
+
+            <Button
+              variant={activeTab === 'security' ? 'secondary' : 'ghost'}
+              onClick={() => setActiveTab('security')}
+              className="justify-start gap-2 text-xs font-bold rounded-xl"
+            >
+              <ShieldAlert className="w-4 h-4 text-rose-500" />
+              Platform Security
             </Button>
           </nav>
         </div>
@@ -180,6 +196,10 @@ export function Settings() {
                 </div>
               </CardContent>
             </Card>
+          )}
+
+          {activeTab === 'security' && (
+            <Security isEmbedded={true} />
           )}
         </div>
       </div>
