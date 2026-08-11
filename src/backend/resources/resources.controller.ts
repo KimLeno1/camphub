@@ -30,3 +30,14 @@ export class ResourcesController {
     );
   }
 }
+
+@Controller('api/resources')
+export class SingleResourceController {
+  constructor(private readonly resourcesService: ResourcesService) {}
+
+  @Get(':id')
+  @UseGuards(FirebaseAuthGuard)
+  async getResourceById(@Param('id') id: string) {
+    return this.resourcesService.getResourceById(id);
+  }
+}

@@ -85,30 +85,4 @@ export class AppGateway implements OnGatewayConnection, OnGatewayDisconnect {
   emitNotification(userId: string, notification: any) {
     this.emitToUser(userId, 'notification', notification);
   }
-
-  // Voice/Live Events logic
-  @SubscribeMessage('join_voice')
-  handleJoinVoice(
-    @ConnectedSocket() client: Socket,
-    @MessageBody() data: { channelId: string, userId: string }
-  ) {
-    const room = `voice_${data.channelId}`;
-    client.join(room);
-    client.to(room).emit('user_joined_voice', { userId: data.userId });
-    
-    // Send back current users (would be stored in memory/Redis in real app)
-    // For now we just acknowledge
-    return { event: 'joined_voice', data: { success: true } };
-  }
-
-  @SubscribeMessage('voice_signal')
-  handleVoiceSignal(
-    @ConnectedSocket() client: Socket,
-    @MessageBody() data: { targetUserId: string, signal: any, fromUserId: string }
-  ) {
-    const targetSocketId = this.userSockets.get(data.targetUserId);
-    if (targetSocketId) {
-      this.server.to(targetSocketId).emit('voice_signal_receive', data);
-    }
-  }
 }

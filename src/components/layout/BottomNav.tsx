@@ -4,7 +4,6 @@ import {
   LayoutDashboard,
   Users2,
   BookOpen,
-  Rss,
   ShieldCheck,
   Building2,
   Sparkles,
@@ -13,7 +12,6 @@ import {
   Settings,
   Shield,
   Calendar,
-  SearchIcon,
   GraduationCap,
   MessageSquare,
   X
@@ -23,9 +21,9 @@ import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 
 const primaryItems = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
+  { name: 'Events', href: '/events', icon: Calendar },
   { name: 'Communities', href: '/communities', icon: Users2 },
   { name: 'Resources', href: '/resources', icon: BookOpen },
-  { name: 'Feed', href: '/feed', icon: Rss },
 ];
 
 const secondaryItems = [
@@ -35,8 +33,6 @@ const secondaryItems = [
   { name: 'Hostels', href: '/hostels', icon: Building2 },
   { name: 'AI Hub', href: '/ai-hub', icon: Sparkles },
   { name: 'Market', href: '/marketplace', icon: ShoppingBag },
-  { name: 'Events', href: '/events', icon: Calendar },
-  { name: 'Search', href: '/search', icon: SearchIcon },
   { name: 'Security', href: '/security', icon: Shield },
   { name: 'Settings', href: '/settings', icon: Settings },
 ];

@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2563eb" />
+      <stop offset="100%" stop-color="#7c3aed" />
+    </linearGradient>
+    <linearGradient id="inner-grad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#1d4ed8" />
+      <stop offset="100%" stop-color="#6d28d9" />
+    </linearGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="512" height="512" rx="112" fill="#090a0f" />
+  <!-- Hexagon Outer Glow / Frame -->
+  <polygon points="256,60 426,158 426,354 256,452 86,354 86,158" fill="url(#grad)" opacity="0.15" />
+  <!-- Main Hexagon Shield -->
+  <polygon points="256,80 406,166 406,346 256,432 106,346 106,166" fill="url(#grad)" />
+  <!-- Inner Hexagon Shield -->
+  <polygon points="256,105 381,177 381,335 256,407 131,335 131,177" fill="url(#inner-grad)" />
+  <!-- Stylized "7" with Shield Accent -->
+  <path d="M190,165 H320 V195 L225,350 H180 L265,210 H190 Z" fill="#ffffff" />
+  <!-- Dot / Star Accent to signify decentralization/governance -->
+  <circle cx="256" cy="256" r="14" fill="#ffffff" />
+</svg>

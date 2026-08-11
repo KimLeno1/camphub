@@ -88,4 +88,21 @@ export class GovernanceController {
   ) {
     return this.governanceService.resolveAppeal(user.uid, caseId, body.appealDecision);
   }
+
+  // 9. BANNED USERS: Get all banned/suspended users eligible for reinstatement
+  @Get('banned-users')
+  async getBannedUsers() {
+    return this.governanceService.getBannedUsers();
+  }
+
+  // 10. REINSTATEMENT PETITION: Create a petition to reinstate a banned user
+  @Post('banned-users/:bannedUserId/reinstatement')
+  @UseGuards(FirebaseAuthGuard)
+  async petitionReinstatement(
+    @CurrentUser() user: any,
+    @Param('bannedUserId') bannedUserId: string,
+    @Body() body: { reason: string }
+  ) {
+    return this.governanceService.createReinstatementPetition(user.uid, bannedUserId, body.reason);
+  }
 }

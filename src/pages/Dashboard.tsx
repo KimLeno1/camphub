@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../lib/api/client';
 import { useAuthStore } from '../store/authStore';
@@ -8,13 +8,21 @@ import { Skeleton } from '../components/ui/skeleton';
 import { 
   Shield, Star, Users, ArrowRight, Zap, Trophy, LogIn, BookOpen, 
   FileText, Download, Scale, ShoppingBag, CheckCircle2, Tag, 
-  Sparkles, Clock, Gavel, ExternalLink, Flame
+  Sparkles, Clock, Gavel, ExternalLink, Flame, MessageSquare, ThumbsUp, ThumbsDown
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '../components/ui/dialog';
 
 export function Dashboard() {
   const { profile, user, openAuthModal } = useAuthStore();
   const navigate = useNavigate();
+
+  const [selectedResource, setSelectedResource] = useState<any | null>(null);
+  const [selectedClub, setSelectedClub] = useState<any | null>(null);
+  const [selectedQuest, setSelectedQuest] = useState<any | null>(null);
+  const [selectedGov, setSelectedGov] = useState<any | null>(null);
+  const [selectedMarketItem, setSelectedMarketItem] = useState<any | null>(null);
 
   // Query user communities
   const { data: communitiesData, isLoading: isCommunitiesLoading } = useQuery({
@@ -304,7 +312,8 @@ export function Dashboard() {
           {mockResources.map((res) => (
             <div 
               key={res.id} 
-              className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-2xl border border-border/70 hover:bg-muted/40 transition-colors gap-3"
+              className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-2xl border border-border/70 hover:bg-muted/40 transition-colors gap-3 cursor-pointer"
+              onClick={() => setSelectedResource(res)}
             >
               <div className="flex items-start gap-3">
                 <div className="p-2.5 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5">
@@ -340,10 +349,13 @@ export function Dashboard() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => navigate('/resources')}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedResource(res);
+                }}
                 className="text-xs gap-1.5 shrink-0 self-start sm:self-center"
               >
-                <Download className="w-3.5 h-3.5 text-blue-600" /> View Resource
+                <BookOpen className="w-3.5 h-3.5 text-blue-600" /> View Details
               </Button>
             </div>
           ))}
@@ -389,7 +401,8 @@ export function Dashboard() {
             mockActiveQuests.map((quest) => (
               <div 
                 key={quest.id}
-                className="p-4 rounded-2xl border border-border/70 hover:bg-muted/40 transition-colors space-y-2.5"
+                className="p-4 rounded-2xl border border-border/70 hover:bg-muted/40 transition-colors space-y-2.5 cursor-pointer"
+                onClick={() => setSelectedQuest(quest)}
               >
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
@@ -422,7 +435,8 @@ export function Dashboard() {
             mockRecommendedClubs.map((club) => (
               <div 
                 key={club.id} 
-                className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl border border-border/70 hover:bg-muted/40 transition-colors gap-3"
+                className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl border border-border/70 hover:bg-muted/40 transition-colors gap-3 cursor-pointer"
+                onClick={() => setSelectedClub(club)}
               >
                 <div className="flex items-start gap-3">
                   <div className={`p-3 rounded-2xl ${club.iconBg} shrink-0 mt-0.5`}>
@@ -444,10 +458,13 @@ export function Dashboard() {
 
                 <Button
                   size="sm"
-                  onClick={() => navigate('/communities')}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedClub(club);
+                  }}
                   className="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs gap-1.5 shrink-0 self-start sm:self-center rounded-xl"
                 >
-                  Join Club
+                  View Details
                 </Button>
               </div>
             ))
@@ -481,7 +498,8 @@ export function Dashboard() {
           {mockGovernance.map((gov) => (
             <div 
               key={gov.id} 
-              className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl border border-border/70 hover:bg-muted/40 transition-colors gap-3"
+              className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl border border-border/70 hover:bg-muted/40 transition-colors gap-3 cursor-pointer"
+              onClick={() => setSelectedGov(gov)}
             >
               <div className="flex items-start gap-3">
                 <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5">
@@ -507,7 +525,10 @@ export function Dashboard() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => navigate('/governance')}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedGov(gov);
+                }}
                 className="text-xs gap-1.5 shrink-0 self-start sm:self-center"
               >
                 Inspect Vote
@@ -543,7 +564,8 @@ export function Dashboard() {
           {mockMarketplace.map((item) => (
             <div 
               key={item.id} 
-              className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl border border-border/70 hover:bg-muted/40 transition-colors gap-3"
+              className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl border border-border/70 hover:bg-muted/40 transition-colors gap-3 cursor-pointer"
+              onClick={() => setSelectedMarketItem(item)}
             >
               <div className="flex items-start gap-3">
                 <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5">
@@ -569,7 +591,10 @@ export function Dashboard() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => navigate('/marketplace')}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedMarketItem(item);
+                }}
                 className="text-xs gap-1.5 shrink-0 self-start sm:self-center"
               >
                 View Listing
@@ -586,6 +611,329 @@ export function Dashboard() {
           </Button>
         </CardFooter>
       </Card>
+
+      {/* Study Resource Details Dialog */}
+      <Dialog open={selectedResource !== null} onOpenChange={(open) => { if (!open) setSelectedResource(null); }}>
+        <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto p-6 rounded-2xl border-border bg-card">
+          {selectedResource && (
+            <div className="space-y-6 text-sm">
+              <DialogHeader className="space-y-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/30">
+                    {selectedResource.category}
+                  </span>
+                  {selectedResource.verified && (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                      <CheckCircle2 className="w-3.5 h-3.5" /> Verified
+                    </span>
+                  )}
+                </div>
+                <DialogTitle className="text-xl font-extrabold font-heading text-foreground tracking-tight leading-snug">
+                  {selectedResource.title}
+                </DialogTitle>
+                <DialogDescription className="text-xs text-muted-foreground">
+                  Published {selectedResource.time} • Highly referenced student document
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="grid grid-cols-2 gap-3 p-4 bg-muted/40 rounded-xl border border-border/50 text-xs">
+                <div>
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Document Type</span>
+                  <span className="font-semibold text-foreground">{selectedResource.type}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">File Size</span>
+                  <span className="font-semibold text-foreground">{selectedResource.size}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Downloads</span>
+                  <span className="font-semibold text-foreground">{selectedResource.downloads} student downloads</span>
+                </div>
+                <div>
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Course Affiliation</span>
+                  <span className="font-semibold text-foreground">General Academics</span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Document Description</h4>
+                <div className="bg-card p-4 rounded-xl border border-border/50">
+                  <p className="text-muted-foreground text-xs leading-relaxed">
+                    This document was shared by a fellow student to assist with revision, coursework, and prep. All uploads are student-verified for authenticity. Always refer to your professor's syllabus for specific requirements.
+                  </p>
+                </div>
+              </div>
+
+              <DialogFooter className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-border/60">
+                <Button 
+                  variant="ghost" 
+                  onClick={() => setSelectedResource(null)}
+                  className="text-xs h-9 rounded-xl w-full sm:w-auto"
+                >
+                  Close
+                </Button>
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <Button
+                    onClick={() => {
+                      toast.success(`Downloading ${selectedResource.title}...`);
+                      setSelectedResource(null);
+                    }}
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs h-9 px-4 rounded-xl w-full sm:w-auto flex items-center justify-center gap-1.5 shadow-md shadow-blue-600/10"
+                  >
+                    <Download className="w-4 h-4" /> Download Now
+                  </Button>
+                </div>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Decentralized Club Details Dialog */}
+      <Dialog open={selectedClub !== null} onOpenChange={(open) => { if (!open) setSelectedClub(null); }}>
+        <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto p-6 rounded-2xl border-border bg-card">
+          {selectedClub && (
+            <div className="space-y-6 text-sm">
+              <DialogHeader className="space-y-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/30 self-start">
+                  {selectedClub.category}
+                </span>
+                <DialogTitle className="text-xl font-extrabold font-heading text-foreground tracking-tight leading-snug">
+                  {selectedClub.name}
+                </DialogTitle>
+                <DialogDescription className="text-xs text-muted-foreground">
+                  Decentralized student-led workspace & discussion club
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="p-4 bg-muted/40 rounded-xl border border-border/50 text-xs flex justify-between items-center">
+                <div>
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Active Members</span>
+                  <span className="text-base font-extrabold text-foreground">{selectedClub.members} Peers</span>
+                </div>
+                <div>
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Governance Status</span>
+                  <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">Self-Governed</span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Mission & Description</h4>
+                <div className="bg-card p-4 rounded-xl border border-border/50">
+                  <p className="text-muted-foreground text-xs leading-relaxed">
+                    {selectedClub.description} Participate in discussion channels, attend student-organized virtual voice workshops, share notes, and collaborate without traditional campus administrative barriers.
+                  </p>
+                </div>
+              </div>
+
+              <DialogFooter className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-border/60">
+                <Button 
+                  variant="ghost" 
+                  onClick={() => setSelectedClub(null)}
+                  className="text-xs h-9 rounded-xl w-full sm:w-auto"
+                >
+                  Close
+                </Button>
+                <Button
+                  onClick={() => {
+                    toast.success(`Successfully registered interest to join ${selectedClub.name}!`);
+                    setSelectedClub(null);
+                  }}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs h-9 px-5 rounded-xl w-full sm:w-auto shadow-md shadow-blue-600/10"
+                >
+                  Join Community
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Active Quest Details Dialog */}
+      <Dialog open={selectedQuest !== null} onOpenChange={(open) => { if (!open) setSelectedQuest(null); }}>
+        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto p-6 rounded-2xl border-border bg-card">
+          {selectedQuest && (
+            <div className="space-y-5 text-sm">
+              <DialogHeader className="space-y-1.5">
+                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/30 self-start">
+                  Community Quest
+                </span>
+                <DialogTitle className="text-lg font-bold font-heading text-foreground tracking-tight">
+                  {selectedQuest.title}
+                </DialogTitle>
+                <DialogDescription className="text-xs text-purple-600 dark:text-purple-400 font-semibold">
+                  Reward: {selectedQuest.reward}
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-3 bg-muted/40 p-4 rounded-xl border border-border/50 text-xs">
+                <div>
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Goal Description</span>
+                  <p className="text-foreground font-medium mt-0.5">{selectedQuest.description}</p>
+                </div>
+                <div className="space-y-1 pt-1">
+                  <div className="flex items-center justify-between text-[11px] font-bold text-muted-foreground">
+                    <span>Task Progress</span>
+                    <span>{selectedQuest.progress} / {selectedQuest.total} Completed</span>
+                  </div>
+                  <div className="w-full bg-muted rounded-full h-2 border border-border/20">
+                    <div 
+                      className="bg-purple-600 h-2 rounded-full transition-all duration-500" 
+                      style={{ width: `${(selectedQuest.progress / selectedQuest.total) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-300 p-3 flex rounded-xl text-xs border border-blue-100 dark:border-blue-900/35">
+                <Sparkles className="w-4 h-4 mr-2 shrink-0 text-blue-500 mt-0.5" />
+                <p>Completing Quests is the primary way to earn high-tier community badges, increase your Trust Level, and unlock Jury duty.</p>
+              </div>
+
+              <DialogFooter className="pt-2 border-t border-border/60">
+                <Button 
+                  onClick={() => setSelectedQuest(null)}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs h-9 rounded-xl"
+                >
+                  Got it, thank you!
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Governance Proposal / Jury Decision Details Dialog */}
+      <Dialog open={selectedGov !== null} onOpenChange={(open) => { if (!open) setSelectedGov(null); }}>
+        <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto p-6 rounded-2xl border-border bg-card">
+          {selectedGov && (
+            <div className="space-y-6 text-sm">
+              <DialogHeader className="space-y-2">
+                <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border self-start ${selectedGov.statusColor}`}>
+                  {selectedGov.status}
+                </span>
+                <DialogTitle className="text-lg font-extrabold font-heading text-foreground tracking-tight leading-snug">
+                  {selectedGov.title}
+                </DialogTitle>
+                <DialogDescription className="text-xs text-muted-foreground">
+                  Status: {selectedGov.votes}
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="p-4 bg-muted/40 rounded-xl border border-border/50 text-xs space-y-2">
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">About this Case</span>
+                <p className="text-muted-foreground text-xs leading-relaxed">
+                  Center7 functions entirely on direct user governance. In case of reports or disputes, all community members vote equally (1 vote per user) over a 7-day period. Majority vote determines the outcome. No individual admin holds moderation authority over users, channels, or materials.
+                </p>
+              </div>
+
+              <div className="space-y-3 bg-card p-4 rounded-xl border border-border/50 text-xs">
+                <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Active Deliberations</h4>
+                <div className="space-y-2 text-muted-foreground leading-relaxed">
+                  <p>• Summoned trusted student jurors are reviewing evidence logs, timestamps, and community guidelines.</p>
+                  <p>• Appeals can be filed within 72 hours of decision publication, prompting a second blind review.</p>
+                </div>
+              </div>
+
+              <DialogFooter className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-border/60">
+                <Button 
+                  variant="ghost" 
+                  onClick={() => setSelectedGov(null)}
+                  className="text-xs h-9 rounded-xl w-full sm:w-auto"
+                >
+                  Close
+                </Button>
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      toast.success('Deliberations and audit trails are fully transparent. Redirecting...');
+                      setSelectedGov(null);
+                      navigate('/governance');
+                    }}
+                    className="text-xs h-9 px-4 rounded-xl w-full sm:w-auto gap-1"
+                  >
+                    Go to Governance Room <ArrowRight className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Market Listing Details Dialog */}
+      <Dialog open={selectedMarketItem !== null} onOpenChange={(open) => { if (!open) setSelectedMarketItem(null); }}>
+        <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto p-6 rounded-2xl border-border bg-card">
+          {selectedMarketItem && (
+            <div className="space-y-6 text-sm">
+              <DialogHeader className="space-y-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                    {selectedMarketItem.category}
+                  </span>
+                  <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 px-2.5 py-0.5 rounded-md bg-emerald-500/10">
+                    {selectedMarketItem.price}
+                  </span>
+                </div>
+                <DialogTitle className="text-xl font-extrabold font-heading text-foreground tracking-tight leading-snug">
+                  {selectedMarketItem.title}
+                </DialogTitle>
+                <DialogDescription className="text-xs text-muted-foreground">
+                  Condition: <span className="font-semibold text-foreground">{selectedMarketItem.condition}</span>
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="grid grid-cols-2 gap-3 p-4 bg-muted/40 rounded-xl border border-border/50 text-xs">
+                <div>
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Seller</span>
+                  <span className="font-semibold text-foreground">{selectedMarketItem.seller}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Seller Reputation</span>
+                  <span className="font-semibold text-foreground text-amber-500">{selectedMarketItem.reputation}</span>
+                </div>
+                <div className="col-span-2">
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Verification Level</span>
+                  <span className="font-semibold text-foreground flex items-center gap-1 mt-0.5">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Student Verification Match OK
+                  </span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Item Details & Description</h4>
+                <div className="bg-card p-4 rounded-xl border border-border/50">
+                  <p className="text-muted-foreground text-xs leading-relaxed">
+                    This item is listed for trade or sale directly on the student campus marketplace. No external escrow fees. Transaction is conducted peer-to-peer in campus common areas or libraries. Meet safely!
+                  </p>
+                </div>
+              </div>
+
+              <DialogFooter className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-border/60">
+                <Button 
+                  variant="ghost" 
+                  onClick={() => setSelectedMarketItem(null)}
+                  className="text-xs h-9 rounded-xl w-full sm:w-auto"
+                >
+                  Close
+                </Button>
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <Button
+                    onClick={() => {
+                      toast.success(`Opening private, decentralized chat with seller ${selectedMarketItem.seller}...`);
+                      setSelectedMarketItem(null);
+                    }}
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs h-9 px-4 rounded-xl w-full sm:w-auto flex items-center justify-center gap-1.5 shadow-md shadow-blue-600/10"
+                  >
+                    <MessageSquare className="w-4 h-4" /> Message Seller
+                  </Button>
+                </div>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
     </div>
   );

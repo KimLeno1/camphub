@@ -6,7 +6,68 @@ import { eq, and, sql, desc, or } from 'drizzle-orm';
 @Injectable()
 export class GovernanceService {
   
-  // 1. REPORT ENGINE & EVIDENCE: Submit report
+  // Helper to resolve all expired cases (> 7 days open)
+  async resolveExpiredCases() {
+    try {
+      const activeCases = await db.select().from(governanceCases).where(eq(governanceCases.status, 'voting'));
+      const now = Date.now();
+      const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+      for (const c of activeCases) {
+        if (now - new Date(c.createdAt).getTime() >= SEVEN_DAYS_MS) {
+          await this.resolveCaseByMajority(c.id);
+        }
+      }
+    } catch (error) {
+      console.error('Error resolving expired governance cases:', error);
+    }
+  }
+
+  // Resolve a case by majority vote
+  async resolveCaseByMajority(caseId: string) {
+    try {
+      const caseResult = await db.select().from(governanceCases).where(eq(governanceCases.id, caseId));
+      if (!caseResult.length) return;
+      const targetCase = caseResult[0];
+
+      if (targetCase.status !== 'voting') return;
+
+      const totalJury = await db.select().from(juryMembers).where(eq(juryMembers.caseId, caseId));
+      let actionVotes = 0;
+      let noActionVotes = 0;
+
+      for (const member of totalJury) {
+        if (member.hasVoted) {
+          const voteResult = await db.select().from(votes).where(eq(votes.juryMemberId, member.id));
+          if (voteResult.length) {
+            const decision = voteResult[0].decision;
+            if (decision === 'action') actionVotes++;
+            else if (decision === 'no_action') noActionVotes++;
+          }
+        }
+      }
+
+      // Majority carries the vote (if tied or no action > action, dismiss)
+      const finalDecision = actionVotes > noActionVotes ? 'action' : 'no_action';
+
+      await db.update(governanceCases)
+        .set({ 
+          status: 'resolved', 
+          decision: finalDecision,
+          updatedAt: new Date() 
+        })
+        .where(eq(governanceCases.id, caseId));
+
+      console.log(`Case ${caseId} resolved by majority vote: ${finalDecision} (Action: ${actionVotes}, No Action: ${noActionVotes})`);
+
+      if (finalDecision === 'action') {
+        await this.executePenalties(targetCase);
+      }
+    } catch (error) {
+      console.error(`Failed to resolve case ${caseId} by majority:`, error);
+    }
+  }
+
+  // 1. REPORT ENGINE & EVIDENCE: Submit report (All users can submit)
   async createCase(
     uid: string, 
     targetType: 'user' | 'message' | 'resource' | 'community', 
@@ -21,11 +82,6 @@ export class GovernanceService {
       if (!reporterResult.length) throw new NotFoundException('User not found');
       const reporter = reporterResult[0];
 
-      // 2. Validate Trust Level (must be >= 2 to report)
-      if (reporter.trustLevel < 2) {
-        throw new ForbiddenException('Trust Level 2 (Member) is required to submit governance reports.');
-      }
-
       // Check that the reported target exists
       if (targetType === 'user') {
         const targetUser = await db.select().from(users).where(eq(users.id, targetId));
@@ -38,7 +94,7 @@ export class GovernanceService {
         if (!targetRes.length) throw new NotFoundException('Target resource not found');
       }
 
-      // 3. Create the case with evidence
+      // 2. Create the case directly in 'voting' status, open to ALL users for 7 days
       const newCase = await db.insert(governanceCases).values({
         targetType,
         targetId,
@@ -46,11 +102,8 @@ export class GovernanceService {
         reason,
         evidenceUrl: evidenceUrl || null,
         evidenceDescription: evidenceDescription || null,
-        status: 'gathering_jury',
+        status: 'voting',
       }).returning();
-
-      // Trigger jury assignment asynchronously (Message-queue simulation)
-      this.assignJury(newCase[0].id).catch(err => console.error('Failed to assign jury async:', err));
 
       return newCase[0];
     } catch (error) {
@@ -60,73 +113,30 @@ export class GovernanceService {
     }
   }
 
-  // 2. JUROR SELECTION: Automatically select a random jury for a case
-  async assignJury(caseId: string, jurySize: number = 5) {
-    try {
-      const caseResult = await db.select().from(governanceCases).where(eq(governanceCases.id, caseId));
-      if (!caseResult.length) throw new NotFoundException('Case not found');
-      
-      const targetCase = caseResult[0];
-
-      // Select random eligible users (Trust Level >= 2), excluding reporter and target (if user)
-      const excludeIds = [targetCase.reporterId];
-      if (targetCase.targetType === 'user') {
-        excludeIds.push(targetCase.targetId);
-      } else if (targetCase.targetType === 'message') {
-        // Exclude the author of the reported message if possible
-        const msg = await db.select().from(messages).where(eq(messages.id, targetCase.targetId));
-        if (msg.length) excludeIds.push(msg[0].userId);
-      } else if (targetCase.targetType === 'resource') {
-        // Exclude uploader of the reported resource
-        const res = await db.select().from(resources).where(eq(resources.id, targetCase.targetId));
-        if (res.length) excludeIds.push(res[0].uploaderId);
-      }
-
-      const eligibleJurors = await db.select()
-        .from(users)
-        .where(
-          and(
-            sql`${users.trustLevel} >= 2`,
-            sql`NOT (${users.id} = ANY(${excludeIds}))`
-          )
-        )
-        .orderBy(sql`RANDOM()`)
-        .limit(jurySize);
-
-      if (eligibleJurors.length < jurySize) {
-        console.warn(`Not enough eligible jurors for case ${caseId}. Found ${eligibleJurors.length}, need ${jurySize}`);
-      }
-
-      // Assign them to the case
-      const juryInserts = eligibleJurors.map(juror => ({
-        caseId,
-        userId: juror.id,
-      }));
-
-      if (juryInserts.length > 0) {
-        await db.insert(juryMembers).values(juryInserts);
-      }
-
-      // Update case status to voting
-      await db.update(governanceCases)
-        .set({ status: 'voting', updatedAt: new Date() })
-        .where(eq(governanceCases.id, caseId));
-
-      return { assigned: juryInserts.length };
-    } catch (error) {
-      console.error('Failed to assign jury:', error);
-      throw new InternalServerErrorException('Jury assignment failed');
-    }
-  }
-
-  // 3. VOTING: Jurors cast their votes with weighted impact
+  // 2. VOTING: All users can vote on any open case (1 user = 1 equal vote)
   async castVote(uid: string, caseId: string, decision: 'action' | 'no_action' | 'abstain', justification?: string) {
     try {
       const userResult = await db.select().from(users).where(eq(users.uid, uid));
       if (!userResult.length) throw new NotFoundException('User not found');
       const user = userResult[0];
 
-      // Find jury membership
+      const caseResult = await db.select().from(governanceCases).where(eq(governanceCases.id, caseId));
+      if (!caseResult.length) throw new NotFoundException('Case not found');
+      const targetCase = caseResult[0];
+
+      if (targetCase.status !== 'voting') {
+        throw new BadRequestException('This case is no longer open for voting');
+      }
+
+      // Check 7 day voting window limit
+      const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+      const isExpired = Date.now() - new Date(targetCase.createdAt).getTime() >= SEVEN_DAYS_MS;
+      if (isExpired) {
+        await this.resolveCaseByMajority(caseId);
+        throw new BadRequestException('Voting for this case closed after 7 days.');
+      }
+
+      // Find or create jury membership record for this user and case
       const juryResult = await db.select().from(juryMembers)
         .where(
           and(
@@ -135,32 +145,31 @@ export class GovernanceService {
           )
         );
 
-      if (!juryResult.length) throw new ForbiddenException('You are not assigned to this jury');
-      const juryMember = juryResult[0];
-
-      if (juryMember.hasVoted) {
-        throw new BadRequestException('You have already cast your vote for this case');
+      let juryMember;
+      if (juryResult.length > 0) {
+        juryMember = juryResult[0];
+        if (juryMember.hasVoted) {
+          throw new BadRequestException('You have already cast your vote for this case');
+        }
+        await db.update(juryMembers).set({ hasVoted: true }).where(eq(juryMembers.id, juryMember.id));
+      } else {
+        const newJury = await db.insert(juryMembers).values({
+          caseId,
+          userId: user.id,
+          hasVoted: true,
+        }).returning();
+        juryMember = newJury[0];
       }
 
-      // Calculate weight based on trust level
-      let weight = '1.0';
-      if (user.trustLevel === 3) weight = '1.5';
-      if (user.trustLevel >= 4) weight = '2.0';
-
-      // Record vote
+      // Record vote with equal weight (1.0 for all users)
       await db.insert(votes).values({
         juryMemberId: juryMember.id,
         decision,
-        weight,
-        justification,
+        weight: '1.0',
+        justification: justification || null,
       });
 
-      // Mark as voted
-      await db.update(juryMembers)
-        .set({ hasVoted: true })
-        .where(eq(juryMembers.id, juryMember.id));
-
-      // Increment votes cast count
+      // Increment votes cast count in user reputation stats
       const existingRep = await db.select().from(userReputations).where(eq(userReputations.userId, user.id));
       if (!existingRep.length) {
         await db.insert(userReputations).values({ userId: user.id, points: 100, votesCast: 1 });
@@ -168,10 +177,58 @@ export class GovernanceService {
         await db.update(userReputations).set({ votesCast: sql`${userReputations.votesCast} + 1` }).where(eq(userReputations.userId, user.id));
       }
 
-      // Trigger check for case resolution
-      this.checkCaseResolution(caseId).catch(err => console.error('Failed to check resolution async:', err));
+      // REINSTATEMENT CHECK: If this is a reinstatement petition and vote is 'action'
+      let reinstated = false;
+      const isReinstatementPetition = targetCase.targetType === 'user' && (targetCase.reason.includes('REINSTATEMENT') || targetCase.reason.includes('reinstatement'));
+      
+      if (isReinstatementPetition && decision === 'action') {
+        // Count total 'action' votes on this petition
+        const allJury = await db.select().from(juryMembers).where(eq(juryMembers.caseId, caseId));
+        let actionVotes = 0;
+        for (const j of allJury) {
+          if (j.hasVoted) {
+            const v = await db.select().from(votes).where(eq(votes.juryMemberId, j.id));
+            if (v.length && v[0].decision === 'action') actionVotes++;
+          }
+        }
 
-      return { success: true };
+        // Determine required vote threshold used to ban him
+        const banCases = await db.select().from(governanceCases).where(
+          and(
+            eq(governanceCases.targetType, 'user'),
+            eq(governanceCases.targetId, targetCase.targetId),
+            eq(governanceCases.decision, 'action')
+          )
+        ).orderBy(desc(governanceCases.updatedAt));
+
+        let requiredVotes = 3;
+        if (banCases.length > 0) {
+          const originalBanJury = await db.select().from(juryMembers).where(eq(juryMembers.caseId, banCases[0].id));
+          let originalActCount = 0;
+          for (const j of originalBanJury) {
+            if (j.hasVoted) {
+              const v = await db.select().from(votes).where(eq(votes.juryMemberId, j.id));
+              if (v.length && v[0].decision === 'action') originalActCount++;
+            }
+          }
+          if (originalActCount > 0) requiredVotes = originalActCount;
+        }
+
+        if (actionVotes >= requiredVotes) {
+          // Immediately reinstate user!
+          reinstated = true;
+          await db.update(users).set({ status: 'active', updatedAt: new Date() }).where(eq(users.id, targetCase.targetId));
+          await db.update(governanceCases).set({ status: 'resolved', decision: 'action', updatedAt: new Date() }).where(eq(governanceCases.id, caseId));
+          await db.delete(penalties).where(eq(penalties.userId, targetCase.targetId));
+          await this.updateUserReputation(targetCase.targetId, 50);
+        }
+      }
+
+      return { 
+        success: true, 
+        reinstated, 
+        message: reinstated ? 'Vote cast! Required vote threshold achieved — user has been reinstated.' : 'Vote cast successfully.' 
+      };
     } catch (error) {
       if (error instanceof NotFoundException || error instanceof ForbiddenException || error instanceof BadRequestException) throw error;
       console.error('Failed to cast vote:', error);
@@ -179,66 +236,7 @@ export class GovernanceService {
     }
   }
 
-  // 4. DECISION ENGINE: Automated tallying and case resolution
-  async checkCaseResolution(caseId: string) {
-    try {
-      const caseResult = await db.select().from(governanceCases).where(eq(governanceCases.id, caseId));
-      if (!caseResult.length) return;
-      const targetCase = caseResult[0];
-
-      if (targetCase.status !== 'voting') return;
-
-      // Get all jury members for this case
-      const totalJury = await db.select().from(juryMembers).where(eq(juryMembers.caseId, caseId));
-      const votedJury = totalJury.filter(j => j.hasVoted);
-
-      // Resolve early if everyone voted, or if a supermajority is achieved.
-      // For this implementation, we resolve when all assigned jury members have voted
-      if (votedJury.length > 0 && votedJury.length === totalJury.length) {
-        // Tally votes
-        let actionWeightSum = 0;
-        let noActionWeightSum = 0;
-
-        for (const member of totalJury) {
-          const voteResult = await db.select().from(votes).where(eq(votes.juryMemberId, member.id));
-          if (voteResult.length) {
-            const vote = voteResult[0];
-            const weight = parseFloat(vote.weight.toString());
-            if (vote.decision === 'action') {
-              actionWeightSum += weight;
-            } else if (vote.decision === 'no_action') {
-              noActionWeightSum += weight;
-            }
-          }
-        }
-
-        const finalDecision = actionWeightSum > noActionWeightSum ? 'action' : 'no_action';
-
-        // Update case status
-        await db.update(governanceCases)
-          .set({ 
-            status: 'resolved', 
-            decision: finalDecision,
-            updatedAt: new Date() 
-          })
-          .where(eq(governanceCases.id, caseId));
-
-        console.log(`Case ${caseId} resolved as: ${finalDecision} (Action: ${actionWeightSum}, No Action: ${noActionWeightSum})`);
-
-        // Execute Penalties or Rewards
-        if (finalDecision === 'action') {
-          await this.executePenalties(targetCase);
-        } else {
-          // If the case is closed as 'no action', report is unsuccessful, but we reward jurors with completion points
-          console.log(`Case ${caseId} closed with No Action. No penalty applied.`);
-        }
-      }
-    } catch (error) {
-      console.error('Error during case resolution check:', error);
-    }
-  }
-
-  // 5. PENALTY ENGINE & REPUTATION UPDATE
+  // 3. PENALTY ENGINE & REPUTATION UPDATE
   private async executePenalties(targetCase: any) {
     try {
       let offenderUserId: string | null = null;
@@ -268,17 +266,17 @@ export class GovernanceService {
           userId: offenderUserId,
           caseId: targetCase.id,
           type: targetCase.targetType === 'user' ? 'suspension' : 'rep_deduction',
-          expiresAt: targetCase.targetType === 'user' ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) : null, // 7 days suspension
+          expiresAt: targetCase.targetType === 'user' ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) : null,
         });
 
-        // 2. Suspend/Warn the user in Users table if it was severe
+        // 2. Suspend user if target is user
         if (targetCase.targetType === 'user') {
           await db.update(users)
             .set({ status: 'suspended', updatedAt: new Date() })
             .where(eq(users.id, offenderUserId));
         }
 
-        // 3. Deduct Reputation Points (-50 reputation points) when report is accepted
+        // 3. Deduct Reputation Points (-50 reputation points)
         await this.updateUserReputation(offenderUserId, -50);
       }
 
@@ -297,7 +295,7 @@ export class GovernanceService {
     }
   }
 
-  // Helper to adjust reputation points (base reputation is 100)
+  // Helper to adjust reputation points
   async updateUserReputation(userId: string, pointsChange: number) {
     try {
       const rep = await db.select().from(userReputations).where(eq(userReputations.userId, userId));
@@ -313,33 +311,18 @@ export class GovernanceService {
           .set({ points: newPoints, updatedAt: new Date() })
           .where(eq(userReputations.userId, userId));
       }
-
-      // Automatically recalculate and adjust Trust Level based on reputation points
-      const updatedRep = await db.select().from(userReputations).where(eq(userReputations.userId, userId));
-      if (updatedRep.length) {
-        const points = updatedRep[0].points;
-        let trustLevel = 1; // Initiate
-        if (points >= 100) trustLevel = 2; // Member
-        if (points >= 300) trustLevel = 3; // Trusted
-        if (points >= 600) trustLevel = 4; // Elder
-
-        await db.update(users)
-          .set({ trustLevel, updatedAt: new Date() })
-          .where(eq(users.id, userId));
-      }
     } catch (error) {
       console.error(`Failed to update reputation for user ${userId}:`, error);
     }
   }
 
-  // 6. APPEALS FLOW: Penalized user can submit an appeal
+  // 4. APPEALS FLOW: Penalized user can submit an appeal
   async submitAppeal(uid: string, caseId: string, appealReason: string) {
     try {
       const userResult = await db.select().from(users).where(eq(users.uid, uid));
       if (!userResult.length) throw new NotFoundException('User not found');
       const user = userResult[0];
 
-      // Get case
       const caseResult = await db.select().from(governanceCases).where(eq(governanceCases.id, caseId));
       if (!caseResult.length) throw new NotFoundException('Case not found');
       const targetCase = caseResult[0];
@@ -348,7 +331,7 @@ export class GovernanceService {
         throw new BadRequestException('Only resolved cases with active enforcement actions can be appealed.');
       }
 
-      // Verify the user appealing is indeed the owner/offender
+      // Verify user appealing is the penalized party
       let isOffender = false;
       if (targetCase.targetType === 'user' && targetCase.targetId === user.id) {
         isOffender = true;
@@ -364,7 +347,6 @@ export class GovernanceService {
         throw new ForbiddenException('Only the penalized party can submit an appeal for this decision.');
       }
 
-      // Update case status to appealed
       await db.update(governanceCases)
         .set({
           status: 'appealed',
@@ -381,19 +363,12 @@ export class GovernanceService {
     }
   }
 
-  // Resolve an appeal (Elder or trusted juror can review and resolve)
+  // Resolve an appeal (Open to community members)
   async resolveAppeal(uid: string, caseId: string, appealDecision: 'upheld' | 'reversed') {
     try {
       const reviewerResult = await db.select().from(users).where(eq(users.uid, uid));
       if (!reviewerResult.length) throw new NotFoundException('User not found');
-      const reviewer = reviewerResult[0];
 
-      // Only Elder (trustLevel 4) can resolve appeals
-      if (reviewer.trustLevel < 4) {
-        throw new ForbiddenException('Only community Elders (Trust Level 4) are authorized to resolve appeals.');
-      }
-
-      // Get case
       const caseResult = await db.select().from(governanceCases).where(eq(governanceCases.id, caseId));
       if (!caseResult.length) throw new NotFoundException('Case not found');
       const targetCase = caseResult[0];
@@ -410,39 +385,31 @@ export class GovernanceService {
         })
         .where(eq(governanceCases.id, caseId));
 
-      // If reversed, undo the penalties
       if (appealDecision === 'reversed') {
         let offenderUserId: string | null = null;
 
         if (targetCase.targetType === 'user') {
           offenderUserId = targetCase.targetId;
-          // Reactivate the user
           await db.update(users).set({ status: 'active' }).where(eq(users.id, offenderUserId));
         } else if (targetCase.targetType === 'message') {
           const msg = await db.select().from(messages).where(eq(messages.id, targetCase.targetId));
           if (msg.length) {
             offenderUserId = msg[0].userId;
-            // Restore content
             await db.update(messages).set({ deletedAt: null }).where(eq(messages.id, targetCase.targetId));
           }
         } else if (targetCase.targetType === 'resource') {
           const res = await db.select().from(resources).where(eq(resources.id, targetCase.targetId));
           if (res.length) {
             offenderUserId = res[0].uploaderId;
-            // Restore resource and clean scan status
             await db.update(resources).set({ deletedAt: null, scanStatus: 'clean' }).where(eq(resources.id, targetCase.targetId));
           }
         }
 
         if (offenderUserId) {
-          // Remove active penalties
           await db.delete(penalties).where(eq(penalties.caseId, targetCase.id));
-
-          // Restore offender's reputation (+50 back)
           await this.updateUserReputation(offenderUserId, 50);
         }
 
-        // Decrement reporter's successful reports count
         await db.update(userReputations)
           .set({ successfulReports: sql`GREATEST(0, ${userReputations.successfulReports} - 1)` })
           .where(eq(userReputations.userId, targetCase.reporterId));
@@ -456,10 +423,12 @@ export class GovernanceService {
     }
   }
 
-  // 7. PUBLIC MODERATION LOG: Fetch all resolved cases
+  // 5. PUBLIC MODERATION LOG: Fetch all resolved cases
   async getResolvedCases() {
     try {
-      return await db.select({
+      await this.resolveExpiredCases();
+
+      const resolved = await db.select({
         id: governanceCases.id,
         targetType: governanceCases.targetType,
         targetId: governanceCases.targetId,
@@ -487,15 +456,46 @@ export class GovernanceService {
         )
       )
       .orderBy(desc(governanceCases.updatedAt));
+
+      // Compute vote tally details for each resolved case
+      const result = [];
+      for (const c of resolved) {
+        const jury = await db.select().from(juryMembers).where(eq(juryMembers.caseId, c.id));
+        let actionVotes = 0;
+        let noActionVotes = 0;
+        let totalVotes = 0;
+
+        for (const j of jury) {
+          if (j.hasVoted) {
+            totalVotes++;
+            const v = await db.select().from(votes).where(eq(votes.juryMemberId, j.id));
+            if (v.length) {
+              if (v[0].decision === 'action') actionVotes++;
+              else if (v[0].decision === 'no_action') noActionVotes++;
+            }
+          }
+        }
+
+        result.push({
+          ...c,
+          totalVotes,
+          actionVotes,
+          noActionVotes,
+        });
+      }
+
+      return result;
     } catch (error) {
       console.error('Failed to fetch public moderation log:', error);
       throw new InternalServerErrorException('Failed to fetch moderation logs');
     }
   }
 
-  // Get case by ID, including its votes, jurors, and target content
+  // Get case by ID, including votes and target content
   async getCaseDetails(caseId: string) {
     try {
+      await this.resolveExpiredCases();
+
       const caseResult = await db.select({
         id: governanceCases.id,
         targetType: governanceCases.targetType,
@@ -562,7 +562,7 @@ export class GovernanceService {
         if (r.length) targetContent = r[0];
       }
 
-      // Fetch jury members and votes
+      // Fetch votes
       const jury = await db.select({
         id: juryMembers.id,
         userId: juryMembers.userId,
@@ -580,8 +580,13 @@ export class GovernanceService {
         .innerJoin(juryMembers, eq(votes.juryMemberId, juryMembers.id))
         .where(eq(juryMembers.caseId, caseId));
 
+      const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+      const createdAtTime = new Date(targetCase.createdAt).getTime();
+      const expiresAt = new Date(createdAtTime + SEVEN_DAYS_MS).toISOString();
+
       return {
         ...targetCase,
+        expiresAt,
         targetContent,
         jury,
         votes: votesList.map(v => ({
@@ -599,44 +604,83 @@ export class GovernanceService {
     }
   }
 
-  // Fetch active jury duties for a specific user
+  // Fetch all active open cases for community voting
   async getJuryDutiesForUser(uid: string) {
     try {
       const userResult = await db.select().from(users).where(eq(users.uid, uid));
       if (!userResult.length) throw new NotFoundException('User not found');
       const user = userResult[0];
 
-      return await db.select({
-        id: governanceCases.id,
-        targetType: governanceCases.targetType,
-        targetId: governanceCases.targetId,
-        reason: governanceCases.reason,
-        status: governanceCases.status,
-        createdAt: governanceCases.createdAt,
-        hasVoted: juryMembers.hasVoted,
-      })
-      .from(juryMembers)
-      .innerJoin(governanceCases, eq(juryMembers.caseId, governanceCases.id))
-      .where(
-        and(
-          eq(juryMembers.userId, user.id),
-          eq(governanceCases.status, 'voting')
-        )
-      )
-      .orderBy(desc(governanceCases.createdAt));
+      // First, auto-resolve any cases open for > 7 days
+      await this.resolveExpiredCases();
+
+      const activeCases = await db.select()
+        .from(governanceCases)
+        .where(eq(governanceCases.status, 'voting'))
+        .orderBy(desc(governanceCases.createdAt));
+
+      const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+
+      const result = [];
+      for (const c of activeCases) {
+        // Check if current user has voted on this case
+        const userJury = await db.select().from(juryMembers)
+          .where(and(eq(juryMembers.caseId, c.id), eq(juryMembers.userId, user.id)));
+        const hasVoted = userJury.length > 0 ? userJury[0].hasVoted : false;
+
+        // Count votes cast
+        const allJury = await db.select().from(juryMembers).where(eq(juryMembers.caseId, c.id));
+        let actionVotes = 0;
+        let noActionVotes = 0;
+        let totalVotes = 0;
+
+        for (const j of allJury) {
+          if (j.hasVoted) {
+            totalVotes++;
+            const v = await db.select().from(votes).where(eq(votes.juryMemberId, j.id));
+            if (v.length) {
+              if (v[0].decision === 'action') actionVotes++;
+              else if (v[0].decision === 'no_action') noActionVotes++;
+            }
+          }
+        }
+
+        const createdAtTime = new Date(c.createdAt).getTime();
+        const expiresAt = new Date(createdAtTime + SEVEN_DAYS_MS).toISOString();
+
+        result.push({
+          id: c.id,
+          targetType: c.targetType,
+          targetId: c.targetId,
+          reason: c.reason,
+          evidenceUrl: c.evidenceUrl,
+          evidenceDescription: c.evidenceDescription,
+          status: c.status,
+          createdAt: c.createdAt,
+          expiresAt,
+          hasVoted,
+          totalVotes,
+          actionVotes,
+          noActionVotes,
+        });
+      }
+
+      return result;
     } catch (error) {
       if (error instanceof NotFoundException) throw error;
-      console.error('Failed to fetch user jury duties:', error);
-      throw new InternalServerErrorException('Failed to fetch jury duties');
+      console.error('Failed to fetch governance cases:', error);
+      throw new InternalServerErrorException('Failed to fetch governance cases');
     }
   }
 
-  // Get user's cases (either submitted or penalised)
+  // Get user's cases (submitted or received)
   async getMyCases(uid: string) {
     try {
       const userResult = await db.select().from(users).where(eq(users.uid, uid));
       if (!userResult.length) throw new NotFoundException('User not found');
       const user = userResult[0];
+
+      await this.resolveExpiredCases();
 
       return await db.select()
         .from(governanceCases)
@@ -656,4 +700,139 @@ export class GovernanceService {
       throw new InternalServerErrorException('Failed to load user cases');
     }
   }
+
+  // Get all suspended/banned users with reinstatement progress
+  async getBannedUsers() {
+    try {
+      const suspendedUsers = await db.select().from(users).where(or(eq(users.status, 'suspended'), eq(users.status, 'banned')));
+      
+      const result = [];
+      for (const u of suspendedUsers) {
+        // Find original ban case
+        const banCases = await db.select().from(governanceCases).where(
+          and(
+            eq(governanceCases.targetType, 'user'),
+            eq(governanceCases.targetId, u.id),
+            eq(governanceCases.decision, 'action')
+          )
+        ).orderBy(desc(governanceCases.updatedAt));
+
+        let banVotes = 3; // Default threshold if unknown
+        let banReason = 'Violation of Community Code of Conduct';
+        let originalBanCaseId = null;
+
+        if (banCases.length > 0) {
+          originalBanCaseId = banCases[0].id;
+          banReason = banCases[0].reason;
+          
+          const jury = await db.select().from(juryMembers).where(eq(juryMembers.caseId, originalBanCaseId));
+          let actCount = 0;
+          for (const j of jury) {
+            if (j.hasVoted) {
+              const v = await db.select().from(votes).where(eq(votes.juryMemberId, j.id));
+              if (v.length && v[0].decision === 'action') actCount++;
+            }
+          }
+          if (actCount > 0) banVotes = actCount;
+        }
+
+        // Find active reinstatement petition case
+        const petitionCases = await db.select().from(governanceCases).where(
+          and(
+            eq(governanceCases.targetType, 'user'),
+            eq(governanceCases.targetId, u.id),
+            eq(governanceCases.status, 'voting')
+          )
+        ).orderBy(desc(governanceCases.createdAt));
+
+        let activePetition = null;
+        if (petitionCases.length > 0) {
+          const petition = petitionCases.find(p => p.reason.includes('REINSTATEMENT') || p.reason.includes('reinstatement')) || petitionCases[0];
+          
+          const jury = await db.select().from(juryMembers).where(eq(juryMembers.caseId, petition.id));
+          let petitionActionVotes = 0;
+          let petitionTotalVotes = 0;
+          for (const j of jury) {
+            if (j.hasVoted) {
+              petitionTotalVotes++;
+              const v = await db.select().from(votes).where(eq(votes.juryMemberId, j.id));
+              if (v.length && v[0].decision === 'action') petitionActionVotes++;
+            }
+          }
+
+          activePetition = {
+            id: petition.id,
+            reason: petition.reason,
+            createdAt: petition.createdAt,
+            reinstatementVotes: petitionActionVotes,
+            totalVotes: petitionTotalVotes,
+            requiredVotes: banVotes,
+          };
+        }
+
+        result.push({
+          id: u.id,
+          displayName: u.displayName,
+          avatarUrl: u.avatarUrl,
+          status: u.status,
+          updatedAt: u.updatedAt,
+          banReason,
+          originalBanCaseId,
+          banVotes,
+          activePetition
+        });
+      }
+
+      return result;
+    } catch (error) {
+      console.error('Failed to fetch banned users:', error);
+      throw new InternalServerErrorException('Failed to fetch banned users');
+    }
+  }
+
+  // Create a reinstatement petition for a banned user
+  async createReinstatementPetition(uid: string, bannedUserId: string, reason: string) {
+    try {
+      const petitionerResult = await db.select().from(users).where(eq(users.uid, uid));
+      if (!petitionerResult.length) throw new NotFoundException('Petitioner not found');
+      const petitioner = petitionerResult[0];
+
+      const bannedUserResult = await db.select().from(users).where(eq(users.id, bannedUserId));
+      if (!bannedUserResult.length) throw new NotFoundException('Banned user not found');
+      const bannedUser = bannedUserResult[0];
+
+      if (bannedUser.status === 'active') {
+        throw new BadRequestException('User is already active and does not require reinstatement.');
+      }
+
+      // Check if active reinstatement petition already exists
+      const existingPetition = await db.select().from(governanceCases).where(
+        and(
+          eq(governanceCases.targetType, 'user'),
+          eq(governanceCases.targetId, bannedUserId),
+          eq(governanceCases.status, 'voting')
+        )
+      );
+
+      if (existingPetition.length > 0) {
+        throw new BadRequestException('An active reinstatement petition is already open for this user.');
+      }
+
+      // Create new petition case
+      const petitionCase = await db.insert(governanceCases).values({
+        targetType: 'user',
+        targetId: bannedUserId,
+        reporterId: petitioner.id,
+        reason: `[REINSTATEMENT PETITION] ${reason}`,
+        status: 'voting'
+      }).returning();
+
+      return petitionCase[0];
+    } catch (error) {
+      if (error instanceof NotFoundException || error instanceof BadRequestException) throw error;
+      console.error('Failed to petition reinstatement:', error);
+      throw new InternalServerErrorException('Failed to submit reinstatement petition');
+    }
+  }
 }
+

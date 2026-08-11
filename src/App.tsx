@@ -18,11 +18,9 @@ import { AiHub } from './pages/AiHub';
 import { Security } from './pages/Security';
 import { Hostels } from './pages/Hostels';
 import { Resources } from './pages/Resources';
-import { Feed } from './pages/Feed';
 import { UserProfile } from './pages/UserProfile';
 import { Opportunities } from './pages/Opportunities';
 import { Chat } from './pages/Chat';
-import { VoiceChat } from './pages/VoiceChat';
 
 import { ResourceDetail } from './pages/ResourceDetail';
 
@@ -51,7 +49,7 @@ export default function App() {
             <Route index element={<Dashboard />} />
             <Route path="communities" element={<Communities />} />
             <Route path="communities/:communityId/*" element={<CommunityDetail />} />
-            <Route path="feed" element={<Feed />} />
+            <Route path="feed" element={<Navigate to="/events" replace />} />
             <Route path="resources" element={<Resources />} />
             <Route path="resources/:id" element={<ResourceDetail />} />
             <Route path="profile/:userId" element={<UserProfile />} />

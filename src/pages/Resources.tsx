@@ -10,7 +10,7 @@ import {
   FileText, Upload, Download, Loader2, AlertCircle, FileSpreadsheet, 
   FileCode, FileArchive, Image as ImageIcon, Presentation, UserCheck, 
   BookOpen, Calendar as CalendarIcon, Search, Filter, Sparkles, CheckCircle2,
-  Paperclip, File
+  Paperclip, File, Clock, Flag, ShieldAlert
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '../components/ui/dialog';
@@ -495,9 +495,13 @@ export function Resources() {
                     <div className={`p-2.5 rounded-xl ${formatMeta.color} shrink-0`}>
                       <FormatIcon className="w-5 h-5" />
                     </div>
-                    {res.verified && (
+                    {res.verified ? (
                       <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
                         <CheckCircle2 className="w-3 h-3" /> Verified
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+                        <Clock className="w-3 h-3 text-amber-500" /> 15d Review
                       </span>
                     )}
                   </div>
@@ -541,10 +545,10 @@ export function Resources() {
                   </div>
                 </CardContent>
 
-                <CardFooter className="p-0 mt-4">
+                <CardFooter className="p-0 mt-4 flex items-center gap-2">
                   <Button 
                     variant="outline" 
-                    className="w-full text-xs font-semibold gap-2 rounded-xl group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 transition-all"
+                    className="flex-1 text-xs font-semibold gap-2 rounded-xl group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 transition-all"
                     onClick={(e) => {
                       e.stopPropagation();
                       if (res.fileUrl && res.fileUrl !== '#') {
@@ -554,7 +558,19 @@ export function Resources() {
                       }
                     }}
                   >
-                    <Download className="w-3.5 h-3.5" /> Download Document
+                    <Download className="w-3.5 h-3.5" /> Download
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-9 px-2.5 text-xs text-muted-foreground hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-xl"
+                    title="Report Resource to Governance"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate('/governance', { state: { reportType: 'resource', targetId: res.id } });
+                    }}
+                  >
+                    <Flag className="w-3.5 h-3.5" />
                   </Button>
                 </CardFooter>
               </Card>

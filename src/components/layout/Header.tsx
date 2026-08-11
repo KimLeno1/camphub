@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Bell, LogIn, SlidersHorizontal, Settings2 } from 'lucide-react';
+import React from 'react';
+import { Bell, LogIn } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
@@ -7,11 +7,9 @@ import { useAuthStore } from '../../store/authStore';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '../ui/dropdown-menu';
 import { getAuth, signOut } from 'firebase/auth';
 import { app } from '../../lib/firebase';
-import { FeedPreferencesModal } from '../modals/FeedPreferencesModal';
 
 export function Header() {
   const { profile, user, openAuthModal } = useAuthStore();
-  const [isFeedModalOpen, setIsFeedModalOpen] = useState(false);
 
   const handleSignOut = () => {
     signOut(getAuth(app));
@@ -33,19 +31,6 @@ export function Header() {
       <div className="flex items-center space-x-2 sm:space-x-3">
         {user ? (
           <>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              title="Adjust Feed Preferences (Resources & Communities)"
-              className="text-muted-foreground relative hover:text-foreground hover:bg-muted/80"
-              onClick={() => setIsFeedModalOpen(true)}
-            >
-              <SlidersHorizontal className="w-5 h-5" />
-              <span className="absolute -bottom-0.5 -right-0.5 p-0.5 bg-blue-600 rounded-full text-white border border-card shadow-xs">
-                <Settings2 className="w-2.5 h-2.5" />
-              </span>
-            </Button>
-
             <Button 
               variant="ghost" 
               size="icon" 
@@ -75,10 +60,7 @@ export function Header() {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => setIsFeedModalOpen(true)} className="gap-2">
-                  <SlidersHorizontal className="w-4 h-4 text-blue-500" />
-                  Feed Preferences
-                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/events')}>Events Calendar</DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate('/settings')}>Settings</DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate('/security')}>Security & Keys</DropdownMenuItem>
                 <DropdownMenuSeparator />
@@ -87,11 +69,6 @@ export function Header() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-
-            <FeedPreferencesModal 
-              open={isFeedModalOpen} 
-              onOpenChange={setIsFeedModalOpen} 
-            />
           </>
         ) : (
           <div className="flex items-center gap-2">
@@ -110,3 +87,4 @@ export function Header() {
     </header>
   );
 }
+

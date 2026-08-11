@@ -404,16 +404,21 @@ export function Login() {
       </main>
 
       {/* Footer block */}
-      <footer className="border-t border-border/60 py-10 mt-20 bg-muted/5">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <span className="font-extrabold text-foreground font-heading">Center7</span>
-            <span>— Autonomous Decentred Community Governance Framework</span>
-          </div>
-          <div className="flex gap-4">
-            <a href="#compliance" className="hover:text-rose-600 transition-colors">OWASP Certified</a>
-            <a href="#constitution" className="hover:text-rose-600 transition-colors">Constitution Codebase</a>
-            <span className="text-emerald-500 font-bold">Secure Payload Channel</span>
+      <footer className="border-t border-border/60 py-8 mt-12 bg-muted/5">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center justify-center gap-2 text-center text-xs text-muted-foreground">
+          <p className="font-medium">
+            © 2026 <strong className="font-bold text-foreground">@Nana Adu Asare</strong>
+          </p>
+          <div className="flex items-center justify-center gap-2 text-xs">
+            <span>Powered by</span>
+            <div className="inline-flex items-center gap-1.5 bg-white text-black px-2.5 py-1 rounded-full border border-slate-200 shadow-2xs">
+              <span className="font-bold text-black tracking-tight">KIM_LENO</span>
+              <img 
+                src="/sss.jpeg" 
+                alt="KIM_LENO" 
+                className="w-5 h-5 rounded-full object-cover border border-slate-300 shrink-0" 
+              />
+            </div>
           </div>
         </div>
       </footer>

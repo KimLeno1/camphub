@@ -8,7 +8,7 @@ import {
   FileText, Download, ArrowLeft, FileSpreadsheet, 
   FileCode, FileArchive, Image as ImageIcon, Presentation, UserCheck, 
   BookOpen, Calendar as CalendarIcon, CheckCircle2,
-  Share2, MessageSquare, ThumbsUp, Eye
+  Share2, MessageSquare, ThumbsUp, Eye, Clock, AlertCircle
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
@@ -175,9 +175,13 @@ export function ResourceDetail() {
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xs font-semibold">
                     {resource.resourceType || 'Study Material'}
                   </span>
-                  {resource.verified && (
+                  {resource.verified ? (
                     <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 text-xs font-semibold">
                       <CheckCircle2 className="w-3.5 h-3.5" /> Verified Resource
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-amber-500/15 text-amber-600 dark:text-amber-400 text-xs font-semibold">
+                      <Clock className="w-3.5 h-3.5" /> 15d Verification Window
                     </span>
                   )}
                 </div>
@@ -201,6 +205,22 @@ export function ResourceDetail() {
                 </div>
               </div>
             </div>
+
+            {!resource.verified && (
+              <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 flex gap-3 text-amber-700 dark:text-amber-300 text-xs">
+                <Clock className="w-5 h-5 shrink-0 text-amber-500 mt-0.5" />
+                <div className="space-y-1">
+                  <p className="font-bold">Decentralized 15-Day Verification Period</p>
+                  <p className="leading-relaxed text-amber-700/80 dark:text-amber-300/80">
+                    This resource was uploaded on {resource.createdAt ? format(new Date(resource.createdAt), 'MMM d, yyyy') : 'an unknown date'}.
+                    Under Center7 self-governance, study materials are automatically verified 15 days after upload, provided they are not reported or penalized by student juries.
+                  </p>
+                  <p className="font-semibold text-amber-600 dark:text-amber-400 mt-1">
+                    Status: Awaiting verification. Automatic approval is active if no community reports are filed.
+                  </p>
+                </div>
+              </div>
+            )}
 
             <Card className="border border-border/50 shadow-sm overflow-hidden bg-card/50 backdrop-blur-sm">
               <CardContent className="p-6">
@@ -262,26 +282,6 @@ export function ResourceDetail() {
               <CardTitle className="text-lg">Resource Details</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 text-sm">
-              {resource.courseCode && (
-                <div>
-                  <p className="text-muted-foreground text-xs font-semibold uppercase tracking-wider mb-1">Course / Subject</p>
-                  <p className="flex items-center gap-2 font-medium">
-                    <BookOpen className="w-4 h-4 text-blue-500" />
-                    {resource.courseCode}
-                  </p>
-                </div>
-              )}
-              
-              {resource.lecturerName && (
-                <div>
-                  <p className="text-muted-foreground text-xs font-semibold uppercase tracking-wider mb-1">Lecturer / Professor</p>
-                  <p className="flex items-center gap-2 font-medium">
-                    <UserCheck className="w-4 h-4 text-purple-500" />
-                    {resource.lecturerName}
-                  </p>
-                </div>
-              )}
-
               {resource.resourceDate && (
                 <div>
                   <p className="text-muted-foreground text-xs font-semibold uppercase tracking-wider mb-1">Academic Term / Date</p>
@@ -291,20 +291,6 @@ export function ResourceDetail() {
                   </p>
                 </div>
               )}
-
-              <div className="pt-2 border-t border-border/50">
-                <p className="text-muted-foreground text-xs font-semibold uppercase tracking-wider mb-1">File Information</p>
-                <div className="grid grid-cols-2 gap-2 mt-2">
-                  <div className="bg-muted p-2 rounded-lg">
-                    <span className="block text-xs text-muted-foreground">Format</span>
-                    <span className="font-mono font-medium">{(resource.extension || resource.mimeType?.split('/')[1] || 'DOC').toUpperCase()}</span>
-                  </div>
-                  <div className="bg-muted p-2 rounded-lg">
-                    <span className="block text-xs text-muted-foreground">Size</span>
-                    <span className="font-mono font-medium">{formatBytes(resource.fileSizeBytes)}</span>
-                  </div>
-                </div>
-              </div>
             </CardContent>
           </Card>
 

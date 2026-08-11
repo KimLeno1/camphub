@@ -1,9 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
   Users2,
-  Rss,
   Building2,
   MessageSquare,
   BookOpen,
@@ -20,8 +19,8 @@ import { useAuthStore } from '../../store/authStore';
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
+  { name: 'Events', href: '/events', icon: Calendar },
   { name: 'Communities', href: '/communities', icon: Users2 },
-  { name: 'Feed', href: '/feed', icon: Rss },
   { name: 'Resources', href: '/resources', icon: BookOpen },
   { name: 'Opportunities', href: '/opportunities', icon: GraduationCap },
   { name: 'Hostels', href: '/hostels', icon: Building2 },
@@ -29,11 +28,27 @@ const navigation = [
   { name: 'AI Hub', href: '/ai-hub', icon: Sparkles },
   { name: 'Marketplace', href: '/marketplace', icon: ShoppingBag },
   { name: 'Governance', href: '/governance', icon: ShieldCheck },
-  { name: 'Events', href: '/events', icon: Calendar },
   { name: 'Security', href: '/security', icon: Shield },
 ];
 
 export function Sidebar({ className }: { className?: string }) {
+  const [isInstallable, setIsInstallable] = useState(!!(window as any).deferredPrompt);
+
+  useEffect(() => {
+    const handleInstallable = () => setIsInstallable(true);
+    window.addEventListener('pwa-installable', handleInstallable);
+    return () => window.removeEventListener('pwa-installable', handleInstallable);
+  }, []);
+
+  const handleInstallClick = async () => {
+    const promptEvent = (window as any).deferredPrompt;
+    if (!promptEvent) return;
+    promptEvent.prompt();
+    await promptEvent.userChoice;
+    (window as any).deferredPrompt = null;
+    setIsInstallable(false);
+  };
+
   return (
     <div className={cn("w-64 border-r border-border bg-card flex flex-col h-full shrink-0", className)}>
       <div className="h-16 flex items-center px-6 border-b border-border">
@@ -63,7 +78,16 @@ export function Sidebar({ className }: { className?: string }) {
         ))}
       </div>
 
-      <div className="p-4 border-t border-border mt-auto">
+      <div className="p-4 border-t border-border mt-auto space-y-2">
+        {isInstallable && (
+          <button
+            onClick={handleInstallClick}
+            className="w-full flex items-center px-3 py-2 text-sm font-semibold transition-all bg-blue-600/10 hover:bg-blue-600/15 text-blue-600 dark:text-blue-400 border border-blue-500/20 rounded-lg cursor-pointer gap-3 mb-1"
+          >
+            <Sparkles className="w-4 h-4 shrink-0 text-amber-500 animate-pulse" />
+            <span>Install App</span>
+          </button>
+        )}
         <NavLink
           to="/settings"
           className={({ isActive }) =>
